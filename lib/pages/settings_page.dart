@@ -133,6 +133,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   final dir = File(_configPath).parent.path;
                   if (Platform.isWindows) {
                     Process.run('explorer', [dir.replaceAll('/', '\\')]);
+                  } else if (Platform.isMacOS) {
+                    Process.run('open', [dir]);
+                  } else if (Platform.isLinux) {
+                    Process.run('xdg-open', [dir]);
                   }
                 },
                 tooltip: '打开目录',
