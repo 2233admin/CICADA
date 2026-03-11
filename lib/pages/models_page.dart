@@ -38,8 +38,8 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
     final ollama = await ConfigService.detectOllamaModels();
     if (!mounted) return;
     setState(() {
-      _cnProviders = cn['providers'] as List;
-      _intlProviders = intl['providers'] as List;
+      _cnProviders = (cn['providers'] as List?) ?? [];
+      _intlProviders = (intl['providers'] as List?) ?? [];
       _configuredIds = configured;
       _ollamaModels = ollama;
     });
@@ -61,7 +61,8 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
     final models = (provider['models'] as List)
         .map((m) => m as Map<String, dynamic>)
         .toList();
-    String selectedModel = existing?['defaultModel'] as String? ?? models.first['id'] as String;
+    String selectedModel = existing?['defaultModel'] as String? ??
+        (models.isNotEmpty ? models.first['id'] as String : '');
 
     if (!mounted) return;
 
@@ -222,8 +223,12 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       ),
     );
 
-    if (result == null) return;
+    if (result == null) {
+      controller.dispose();
+      return;
+    }
     if (result == '__removed__') {
+      controller.dispose();
       setState(() => _configuredIds.remove(provider['id']));
       return;
     }
@@ -241,6 +246,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       );
       setState(() => _configuredIds.add(provider['id'] as String));
     }
+    controller.dispose();
   }
 
   @override
@@ -457,11 +463,21 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       ),
     );
 
-    if (result != true) return;
+    if (result != true) {
+      nameCtrl.dispose();
+      baseCtrl.dispose();
+      keyCtrl.dispose();
+      modelCtrl.dispose();
+      return;
+    }
     final name = nameCtrl.text.trim();
     final base = baseCtrl.text.trim();
     final key = keyCtrl.text.trim();
     final model = modelCtrl.text.trim();
+    nameCtrl.dispose();
+    baseCtrl.dispose();
+    keyCtrl.dispose();
+    modelCtrl.dispose();
     if (name.isEmpty || base.isEmpty || model.isEmpty) return;
 
     final id = 'custom-${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}';

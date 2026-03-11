@@ -27,7 +27,6 @@ class _DashboardPageState extends State<DashboardPage>
   Set<String> _configuredProviders = {};
   Timer? _pollTimer;
   Timer? _clockTimer;
-  Timer? _uptimeTimer;
   final List<String> _serviceLog = [];
 
   // Uptime tracking
@@ -84,7 +83,6 @@ class _DashboardPageState extends State<DashboardPage>
   void dispose() {
     _pollTimer?.cancel();
     _clockTimer?.cancel();
-    _uptimeTimer?.cancel();
     _cursorController.dispose();
     super.dispose();
   }
@@ -95,10 +93,10 @@ class _DashboardPageState extends State<DashboardPage>
     if (!mounted) return;
     setState(() {
       _nodeVersion = nodeResult.exitCode == 0
-          ? (nodeResult.stdout as String).trim()
+          ? nodeResult.stdout.toString().trim()
           : '未安装';
       _openclawVersion = clawResult.exitCode == 0
-          ? (clawResult.stdout as String).trim()
+          ? clawResult.stdout.toString().trim()
           : '未安装';
     });
   }
@@ -143,8 +141,8 @@ class _DashboardPageState extends State<DashboardPage>
       }
 
       if (!mounted) return;
-      final stdout = (result.stdout as String).trim();
-      final stderr = (result.stderr as String).trim();
+      final stdout = result.stdout.toString().trim();
+      final stderr = result.stderr.toString().trim();
       if (stdout.isNotEmpty) setState(() => _serviceLog.add(stdout));
       if (stderr.isNotEmpty) setState(() => _serviceLog.add(stderr));
 
@@ -435,6 +433,10 @@ class _DashboardPageState extends State<DashboardPage>
                   onPressed: () {
                     if (Platform.isWindows) {
                       Process.run('cmd', ['/c', 'start', 'cmd']);
+                    } else if (Platform.isMacOS) {
+                      Process.run('open', ['-a', 'Terminal']);
+                    } else if (Platform.isLinux) {
+                      Process.run('x-terminal-emulator', []);
                     }
                   },
                 ),
@@ -446,6 +448,10 @@ class _DashboardPageState extends State<DashboardPage>
                     final dir = ConfigService.configDir;
                     if (Platform.isWindows) {
                       Process.run('explorer', [dir.replaceAll('/', '\\')]);
+                    } else if (Platform.isMacOS) {
+                      Process.run('open', [dir]);
+                    } else if (Platform.isLinux) {
+                      Process.run('xdg-open', [dir]);
                     }
                   },
                 ),
