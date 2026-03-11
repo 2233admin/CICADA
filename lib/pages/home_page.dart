@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../app/theme/cicada_colors.dart';
+import '../app/widgets/status_badge.dart';
 import 'dashboard_page.dart';
 import 'setup_page.dart';
 import 'models_page.dart';
@@ -40,7 +42,7 @@ class _HomePageState extends State<HomePage> {
       body: Row(
         children: [
           _buildSidebar(),
-          const VerticalDivider(width: 1, color: Color(0xFF30363D)),
+          const VerticalDivider(width: 1, color: CicadaColors.border),
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
@@ -80,18 +82,39 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSidebar() {
     return Container(
       width: 220,
-      color: const Color(0xFF161B22),
+      color: CicadaColors.surface,
       child: Column(
         children: [
           const SizedBox(height: 24),
-          const Text(
-            '\u{1F997} 知了猴',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'OpenClaw 启动器',
-            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          // Logo area with accent line
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(width: 3, height: 24, color: CicadaColors.accent),
+              const SizedBox(width: 10),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'CICADA',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 3,
+                      color: CicadaColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'OpenClaw Launcher',
+                    style: TextStyle(
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      color: CicadaColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 32),
           Expanded(
@@ -102,14 +125,14 @@ class _HomePageState extends State<HomePage> {
                 final item = _navItems[index];
                 final selected = _selectedIndex == index;
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 2),
                   child: Material(
                     color: selected
-                        ? const Color(0xFF7C3AED).withValues(alpha: 0.15)
+                        ? CicadaColors.data.withValues(alpha: 0.12)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                       onTap: () => _navigateTo(index),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -118,20 +141,28 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: Row(
                           children: [
+                            if (selected)
+                              Container(
+                                width: 2,
+                                height: 16,
+                                margin: const EdgeInsets.only(right: 10),
+                                color: CicadaColors.accent,
+                              ),
                             Icon(
                               item.icon,
-                              size: 20,
+                              size: 18,
                               color: selected
-                                  ? const Color(0xFF7C3AED)
-                                  : Colors.grey[400],
+                                  ? CicadaColors.accent
+                                  : CicadaColors.textTertiary,
                             ),
                             const SizedBox(width: 12),
                             Text(
                               item.label,
                               style: TextStyle(
+                                fontSize: 13,
                                 color: selected
-                                    ? Colors.white
-                                    : Colors.grey[400],
+                                    ? CicadaColors.textPrimary
+                                    : CicadaColors.textSecondary,
                                 fontWeight: selected
                                     ? FontWeight.w600
                                     : FontWeight.normal,
@@ -146,27 +177,12 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          Container(
+          // Service status at bottom
+          Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _serviceRunning ? Colors.green : Colors.red,
-                    boxShadow: _serviceRunning
-                        ? [BoxShadow(color: Colors.green.withValues(alpha: 0.5), blurRadius: 6)]
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _serviceRunning ? '服务运行中' : '服务已停止',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-              ],
+            child: StatusBadge(
+              type: _serviceRunning ? StatusType.online : StatusType.offline,
+              label: _serviceRunning ? 'SERVICE ONLINE' : 'SERVICE OFFLINE',
             ),
           ),
         ],

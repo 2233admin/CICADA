@@ -8,7 +8,8 @@
       "apiBase": "https://ark.cn-beijing.volces.com/api/v3",
       "models": [
         {"id": "doubao-seed-2.0", "name": "Doubao Seed 2.0", "context": 128000},
-        {"id": "doubao-seed-2.0-code", "name": "Doubao Seed 2.0 Code", "context": 128000}
+        {"id": "doubao-seed-2.0-code", "name": "Doubao Seed 2.0 Code", "context": 128000},
+        {"id": "doubao-seed-2.0-pro", "name": "Doubao Seed 2.0 Pro", "context": 128000}
       ],
       "keyUrl": "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
       "freeQuota": "500万 tokens/月免费",
@@ -29,18 +30,20 @@
       "docs": "https://platform.deepseek.com/api-docs"
     },
     {
-      "id": "kimi",
-      "name": "Kimi (月之暗面)",
-      "provider": "moonshot",
-      "description": "超长上下文，适合文档处理",
-      "apiBase": "https://api.moonshot.cn/v1",
+      "id": "qwen",
+      "name": "通义千问 (Qwen)",
+      "provider": "dashscope",
+      "description": "阿里云大模型，多模态能力强",
+      "apiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "models": [
-        {"id": "moonshot-v1-auto", "name": "Kimi Auto", "context": 1000000},
-        {"id": "moonshot-v1-128k", "name": "Kimi 128K", "context": 128000}
+        {"id": "qwen-max", "name": "Qwen Max", "context": 32000},
+        {"id": "qwen-plus", "name": "Qwen Plus", "context": 131072},
+        {"id": "qwen-turbo", "name": "Qwen Turbo (免费)", "context": 131072},
+        {"id": "qwen-coder-plus", "name": "Qwen Coder Plus", "context": 131072}
       ],
-      "keyUrl": "https://platform.moonshot.cn/console/api-keys",
-      "freeQuota": "注册送 15元额度",
-      "docs": "https://platform.moonshot.cn/docs"
+      "keyUrl": "https://dashscope.console.aliyun.com/apiKey",
+      "freeQuota": "Qwen Turbo 免费，其他送 100万 tokens",
+      "docs": "https://help.aliyun.com/zh/model-studio/"
     },
     {
       "id": "glm",
@@ -57,19 +60,106 @@
       "docs": "https://open.bigmodel.cn/dev/howuse/introduction"
     },
     {
-      "id": "qwen",
-      "name": "通义千问 (Qwen)",
-      "provider": "dashscope",
-      "description": "阿里云大模型，多模态能力强",
-      "apiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "id": "kimi",
+      "name": "Kimi (月之暗面)",
+      "provider": "moonshot",
+      "description": "超长上下文，适合文档处理",
+      "apiBase": "https://api.moonshot.cn/v1",
       "models": [
-        {"id": "qwen-max", "name": "Qwen Max", "context": 32000},
-        {"id": "qwen-plus", "name": "Qwen Plus", "context": 131072},
-        {"id": "qwen-turbo", "name": "Qwen Turbo (免费)", "context": 131072}
+        {"id": "moonshot-v1-auto", "name": "Kimi Auto", "context": 1000000},
+        {"id": "moonshot-v1-128k", "name": "Kimi 128K", "context": 128000}
       ],
-      "keyUrl": "https://dashscope.console.aliyun.com/apiKey",
-      "freeQuota": "Qwen Turbo 免费，其他送 100万 tokens",
-      "docs": "https://help.aliyun.com/zh/model-studio/"
+      "keyUrl": "https://platform.moonshot.cn/console/api-keys",
+      "freeQuota": "注册送 15元额度",
+      "docs": "https://platform.moonshot.cn/docs"
+    },
+    {
+      "id": "ernie",
+      "name": "文心一言 (ERNIE)",
+      "provider": "baidu",
+      "description": "百度大模型，中文理解能力强",
+      "apiBase": "https://qianfan.baidubce.com/v2",
+      "models": [
+        {"id": "ernie-4.5-8k", "name": "ERNIE 4.5 8K", "context": 8000},
+        {"id": "ernie-4.5-128k", "name": "ERNIE 4.5 128K", "context": 128000},
+        {"id": "ernie-speed-128k", "name": "ERNIE Speed 128K (免费)", "context": 128000}
+      ],
+      "keyUrl": "https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application",
+      "freeQuota": "ERNIE Speed 免费",
+      "docs": "https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html"
+    },
+    {
+      "id": "spark",
+      "name": "讯飞星火 (Spark)",
+      "provider": "iflytek",
+      "description": "科大讯飞大模型，语音+文本多模态",
+      "apiBase": "https://spark-api-open.xf-yun.com/v1",
+      "models": [
+        {"id": "generalv3.5", "name": "Spark Max", "context": 128000},
+        {"id": "4.0Ultra", "name": "Spark 4.0 Ultra", "context": 128000},
+        {"id": "generalv3", "name": "Spark Pro (免费)", "context": 128000}
+      ],
+      "keyUrl": "https://console.xfyun.cn/services/bm35",
+      "freeQuota": "Spark Pro 免费，其他送 200万 tokens",
+      "docs": "https://www.xfyun.cn/doc/spark/HTTP%E8%B0%83%E7%94%A8%E6%96%87%E6%A1%A3.html"
+    },
+    {
+      "id": "baichuan",
+      "name": "百川 (Baichuan)",
+      "provider": "baichuan",
+      "description": "搜索增强，适合知识问答",
+      "apiBase": "https://api.baichuan-ai.com/v1",
+      "models": [
+        {"id": "Baichuan4-Air", "name": "Baichuan4 Air", "context": 32000},
+        {"id": "Baichuan4-Turbo", "name": "Baichuan4 Turbo", "context": 32000}
+      ],
+      "keyUrl": "https://platform.baichuan-ai.com/console/apikey",
+      "freeQuota": "注册送额度",
+      "docs": "https://platform.baichuan-ai.com/docs/api"
+    },
+    {
+      "id": "yi",
+      "name": "零一万物 (Yi)",
+      "provider": "lingyiwanwu",
+      "description": "零一万物大模型，推理能力强",
+      "apiBase": "https://api.lingyiwanwu.com/v1",
+      "models": [
+        {"id": "yi-lightning", "name": "Yi Lightning", "context": 16000},
+        {"id": "yi-large", "name": "Yi Large", "context": 32000}
+      ],
+      "keyUrl": "https://platform.lingyiwanwu.com/apikeys",
+      "freeQuota": "注册送额度",
+      "docs": "https://platform.lingyiwanwu.com/docs"
+    },
+    {
+      "id": "stepfun",
+      "name": "阶跃星辰 (Step)",
+      "provider": "stepfun",
+      "description": "多模态，支持图像+视频理解",
+      "apiBase": "https://api.stepfun.com/v1",
+      "models": [
+        {"id": "step-2-16k", "name": "Step 2 16K", "context": 16000},
+        {"id": "step-1-128k", "name": "Step 1 128K", "context": 128000}
+      ],
+      "keyUrl": "https://platform.stepfun.com/account-center/api-keys",
+      "freeQuota": "注册送额度",
+      "docs": "https://platform.stepfun.com/docs/overview/concept"
+    },
+    {
+      "id": "siliconflow",
+      "name": "SiliconFlow (硅基流动)",
+      "provider": "siliconflow",
+      "description": "模型聚合平台，多种开源模型一站接入",
+      "apiBase": "https://api.siliconflow.cn/v1",
+      "models": [
+        {"id": "deepseek-ai/DeepSeek-V3", "name": "DeepSeek V3", "context": 64000},
+        {"id": "deepseek-ai/DeepSeek-R1", "name": "DeepSeek R1", "context": 64000},
+        {"id": "Qwen/Qwen2.5-72B-Instruct", "name": "Qwen 2.5 72B", "context": 32000},
+        {"id": "THUDM/glm-4-9b-chat", "name": "GLM-4 9B (免费)", "context": 32000}
+      ],
+      "keyUrl": "https://cloud.siliconflow.cn/account/ak",
+      "freeQuota": "多款免费模型，注册送 2000万 tokens",
+      "docs": "https://docs.siliconflow.cn/"
     },
     {
       "id": "minimax",
@@ -83,6 +173,20 @@
       "keyUrl": "https://platform.minimaxi.com/user-center/basic-information/interface-key",
       "freeQuota": "注册送额度",
       "docs": "https://platform.minimaxi.com/document/introduction"
+    },
+    {
+      "id": "hunyuan",
+      "name": "腾讯混元 (Hunyuan)",
+      "provider": "hunyuan",
+      "description": "腾讯大模型，支持搜索增强",
+      "apiBase": "https://api.hunyuan.cloud.tencent.com/v1",
+      "models": [
+        {"id": "hunyuan-turbo", "name": "Hunyuan Turbo", "context": 32000},
+        {"id": "hunyuan-lite", "name": "Hunyuan Lite (免费)", "context": 32000}
+      ],
+      "keyUrl": "https://console.cloud.tencent.com/hunyuan/api-key",
+      "freeQuota": "Hunyuan Lite 免费",
+      "docs": "https://cloud.tencent.com/document/product/1729"
     },
     {
       "id": "ollama",

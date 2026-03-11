@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app/theme/cicada_colors.dart';
 import '../services/config_service.dart';
 import '../services/update_service.dart';
 
@@ -83,10 +84,10 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161B22),
+        backgroundColor: CicadaColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF30363D)),
+          side: const BorderSide(color: CicadaColors.border),
         ),
         title: const Text('确认清理'),
         content: const Text('将清除所有已保存的 API Key 和设置，此操作不可恢复。'),
@@ -94,7 +95,7 @@ class _SettingsPageState extends State<SettingsPage> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: CicadaColors.alert),
             child: const Text('清理'),
           ),
         ],
@@ -118,8 +119,8 @@ class _SettingsPageState extends State<SettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '设置',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            'SETTINGS',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2.0),
           ),
           const SizedBox(height: 24),
           _buildSection('OpenClaw 配置', [
@@ -152,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 }.entries.map(
                   (e) => RadioListTile<String>(
                     title: Text(e.key),
-                    subtitle: Text(e.value, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    subtitle: Text(e.value, style: TextStyle(fontSize: 12, color: CicadaColors.textTertiary)),
                     value: e.value,
                     dense: true,
                   ),
@@ -186,9 +187,9 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 24),
           _buildSection('数据管理', [
             ListTile(
-              title: const Text('清理所有数据', style: TextStyle(color: Colors.red)),
+              title: const Text('清理所有数据', style: TextStyle(color: CicadaColors.alert)),
               subtitle: const Text('删除所有已保存的 API Key 和设置'),
-              trailing: const Icon(Icons.delete_outline, color: Colors.red),
+              trailing: const Icon(Icons.delete_outline, color: CicadaColors.alert),
               onTap: _clearData,
             ),
           ]),
@@ -202,21 +203,21 @@ class _SettingsPageState extends State<SettingsPage> {
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2B1C),
+        color: CicadaColors.ok.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF2EA043)),
+        border: Border.all(color: CicadaColors.ok),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.new_releases_outlined, color: Color(0xFF3FB950), size: 16),
+              const Icon(Icons.new_releases_outlined, color: CicadaColors.ok, size: 16),
               const SizedBox(width: 6),
               Text(
                 '发现新版本 v${info.latestVersion}',
                 style: const TextStyle(
-                  color: Color(0xFF3FB950),
+                  color: CicadaColors.ok,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -226,7 +227,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 8),
             Text(
               info.releaseNotes,
-              style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+              style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
               maxLines: 6,
               overflow: TextOverflow.ellipsis,
             ),
@@ -240,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   icon: const Icon(Icons.download, size: 16),
                   label: const Text('下载安装'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2EA043),
+                    backgroundColor: CicadaColors.ok,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   onPressed: () => _downloadUpdate(info.downloadUrl),
@@ -264,7 +265,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFF30363D)),
+        side: const BorderSide(color: CicadaColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -288,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildSettingRow(String label, String value, {Widget? trailing}) {
     return ListTile(
       title: Text(label),
-      subtitle: Text(value, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+      subtitle: Text(value, style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary)),
       trailing: trailing,
     );
   }

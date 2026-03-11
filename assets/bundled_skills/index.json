@@ -1,0 +1,54 @@
+{
+  "version": "0.1.0",
+  "generatedAt": "2026-03-11",
+  "skills": [
+    {
+      "name": "code-review",
+      "version": "1.0.0",
+      "description": "自动化代码质量检查与审查建议",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    },
+    {
+      "name": "doc-gen",
+      "version": "1.0.0",
+      "description": "从代码自动生成 API 文档",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    },
+    {
+      "name": "test-helper",
+      "version": "1.0.0",
+      "description": "自动生成单元测试用例",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    },
+    {
+      "name": "git-helper",
+      "version": "1.0.0",
+      "description": "智能 commit message 生成",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    },
+    {
+      "name": "refactor",
+      "version": "1.0.0",
+      "description": "代码重构与优化建议",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    },
+    {
+      "name": "i18n",
+      "version": "1.0.0",
+      "description": "多语言国际化翻译支持",
+      "author": "clawhub",
+      "sha256": "",
+      "files": ["skill.md"]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../app/theme/cicada_colors.dart';
 import '../services/installer_service.dart';
 import '../widgets/terminal_output.dart';
 
@@ -96,23 +97,23 @@ class _SetupPageState extends State<SetupPage> {
           Row(
             children: [
               const Text(
-                '安装向导',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                'SETUP WIZARD',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2.0),
               ),
               const Spacer(),
               if (_nodeInstalled && _openclawInstalled)
                 Chip(
                   label: const Text('环境就绪'),
-                  avatar: const Icon(Icons.check_circle, size: 16, color: Colors.green),
-                  backgroundColor: Colors.green.withValues(alpha: 0.15),
+                  avatar: const Icon(Icons.check_circle, size: 16, color: CicadaColors.ok),
+                  backgroundColor: CicadaColors.ok.withValues(alpha: 0.15),
                   side: BorderSide.none,
                 ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             '跟随向导完成 OpenClaw 安装，整个过程约 5 分钟',
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: CicadaColors.textSecondary),
           ),
           const SizedBox(height: 24),
           Stepper(
@@ -132,7 +133,7 @@ class _SetupPageState extends State<SetupPage> {
                       FilledButton(
                         onPressed: details.onStepContinue,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: CicadaColors.data,
                         ),
                         child: const Text('下一步'),
                       ),
@@ -142,7 +143,7 @@ class _SetupPageState extends State<SetupPage> {
                         icon: const Icon(Icons.arrow_forward),
                         label: const Text('前往模型配置'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: CicadaColors.data,
                         ),
                       ),
                     if (details.currentStep > 0) ...[
@@ -215,14 +216,14 @@ class _SetupPageState extends State<SetupPage> {
         const SizedBox(height: 12),
         if (_nodeInstalled && _openclawInstalled)
           const Text('所有依赖已就绪，可直接跳到最后一步。',
-              style: TextStyle(color: Colors.green)),
+              style: TextStyle(color: CicadaColors.ok)),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: _detect,
           icon: const Icon(Icons.refresh, size: 16),
           label: const Text('重新检测'),
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF30363D)),
+            side: const BorderSide(color: CicadaColors.border),
           ),
         ),
       ],
@@ -233,12 +234,12 @@ class _SetupPageState extends State<SetupPage> {
     return Row(
       children: [
         Icon(ok ? Icons.check_circle : Icons.cancel,
-            color: ok ? Colors.green : Colors.red, size: 20),
+            color: ok ? CicadaColors.ok : CicadaColors.alert, size: 20),
         const SizedBox(width: 8),
         Text('$name: ${ok ? "已安装" : "未安装"}'),
         if (version.isNotEmpty) ...[
           const SizedBox(width: 8),
-          Text('($version)', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+          Text('($version)', style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary)),
         ],
       ],
     );
@@ -268,7 +269,7 @@ class _SetupPageState extends State<SetupPage> {
         ),
         if (_online) ...[
           const SizedBox(height: 12),
-          const Text('NPM 镜像源:', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text('包管理镜像源:', style: TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           RadioGroup<String>(
             groupValue: _selectedMirror,
@@ -278,10 +279,12 @@ class _SetupPageState extends State<SetupPage> {
                 '淘宝镜像（推荐）': 'https://registry.npmmirror.com',
                 '腾讯镜像': 'https://mirrors.cloud.tencent.com/npm/',
                 '华为镜像': 'https://repo.huaweicloud.com/repository/npm/',
+                '中科大镜像': 'https://npmreg.proxy.ustclug.org/',
+                '官方源（海外用户）': 'https://registry.npmjs.org',
               }.entries.map(
                 (e) => RadioListTile<String>(
                   title: Text(e.key),
-                  subtitle: Text(e.value, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  subtitle: Text(e.value, style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary)),
                   value: e.value,
                   dense: true,
                 ),
@@ -297,7 +300,7 @@ class _SetupPageState extends State<SetupPage> {
     if (_nodeInstalled) {
       return Row(
         children: [
-          const Icon(Icons.check_circle, color: Colors.green),
+          const Icon(Icons.check_circle, color: CicadaColors.ok),
           const SizedBox(width: 8),
           Text('Node.js 已安装 ($_nodeVersion)，跳过此步骤'),
         ],
@@ -323,7 +326,7 @@ class _SetupPageState extends State<SetupPage> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.download),
               label: Text(_installing ? '安装中...' : '安装 Node.js'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
+              style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
             ),
             const SizedBox(width: 12),
             OutlinedButton.icon(
@@ -331,7 +334,7 @@ class _SetupPageState extends State<SetupPage> {
               icon: const Icon(Icons.refresh, size: 16),
               label: const Text('已手动安装？重新检测'),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF30363D)),
+                side: const BorderSide(color: CicadaColors.border),
               ),
             ),
           ],
@@ -348,7 +351,7 @@ class _SetupPageState extends State<SetupPage> {
     if (_openclawInstalled) {
       return Row(
         children: [
-          const Icon(Icons.check_circle, color: Colors.green),
+          const Icon(Icons.check_circle, color: CicadaColors.ok),
           const SizedBox(width: 8),
           Text('OpenClaw 已安装 ($_clawVersion)，跳过此步骤'),
         ],
@@ -366,7 +369,7 @@ class _SetupPageState extends State<SetupPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('将通过 npm 安装 OpenClaw${_online ? "（使用 ${_selectedMirror.split("/").last} 镜像）" : ""}'),
+        Text('将通过 npm/pnpm 安装 OpenClaw${_online ? "（使用 ${_selectedMirror.split("/").reversed.firstWhere((s) => s.isNotEmpty, orElse: () => _selectedMirror)} 镜像）" : ""}'),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -385,7 +388,7 @@ class _SetupPageState extends State<SetupPage> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.download),
               label: Text(_installing ? '安装中...' : '安装 OpenClaw'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
+              style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
             ),
             const SizedBox(width: 12),
             OutlinedButton.icon(
@@ -393,7 +396,7 @@ class _SetupPageState extends State<SetupPage> {
               icon: const Icon(Icons.refresh, size: 16),
               label: const Text('重新检测'),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF30363D)),
+                side: const BorderSide(color: CicadaColors.border),
               ),
             ),
           ],
@@ -427,7 +430,7 @@ class _SetupPageState extends State<SetupPage> {
           const SizedBox(height: 4),
           Text(
             '推荐：智谱 GLM-4 Flash（完全免费）',
-            style: TextStyle(color: Colors.green[300], fontWeight: FontWeight.w500),
+            style: const TextStyle(color: CicadaColors.ok, fontWeight: FontWeight.w500),
           ),
         ],
       ],

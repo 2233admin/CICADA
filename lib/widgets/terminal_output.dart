@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app/theme/cicada_colors.dart';
 
 class TerminalOutput extends StatefulWidget {
   final List<String> lines;
@@ -45,9 +46,9 @@ class _TerminalOutputState extends State<TerminalOutput> {
       height: widget.height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1117),
+        color: CicadaColors.background,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: CicadaColors.border),
       ),
       child: ListView.builder(
         controller: _controller,
@@ -63,10 +64,10 @@ class _TerminalOutputState extends State<TerminalOutput> {
               fontFamily: 'Consolas',
               fontSize: 12,
               color: isError
-                  ? const Color(0xFFFF7B72)
+                  ? CicadaColors.alert
                   : isDone
-                      ? const Color(0xFF7EE787)
-                      : const Color(0xFF8B949E),
+                      ? CicadaColors.ok
+                      : CicadaColors.muted,
             ),
           );
         },

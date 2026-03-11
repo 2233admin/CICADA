@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
+import 'app/theme/theme.dart';
 import 'pages/home_page.dart';
 
 void main() async {
@@ -18,7 +20,7 @@ void main() async {
     await windowManager.focus();
   });
 
-  runApp(const CicadaApp());
+  runApp(const ProviderScope(child: CicadaApp()));
 }
 
 class CicadaApp extends StatelessWidget {
@@ -29,28 +31,7 @@ class CicadaApp extends StatelessWidget {
     return MaterialApp(
       title: '知了猴',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0D1117),
-        colorSchemeSeed: const Color(0xFF7C3AED),
-        useMaterial3: true,
-        cardTheme: const CardThemeData(
-          color: Color(0xFF161B22),
-          elevation: 0,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF0D1117),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF30363D)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF30363D)),
-          ),
-        ),
-      ),
+      theme: CicadaTheme.dark,
       home: const HomePage(),
     );
   }

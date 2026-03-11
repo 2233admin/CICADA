@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^6.1.2
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   http: ^1.2.1
   shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
@@ -21,8 +22,18 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  riverpod_generator: ^2.6.2
+  build_runner: ^2.4.13
+  custom_lint: ^0.7.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/presets/
+    - assets/bundled_skills/
+    - assets/bundled_skills/code-review/
+    - assets/bundled_skills/doc-gen/
+    - assets/bundled_skills/test-helper/
+    - assets/bundled_skills/git-helper/
+    - assets/bundled_skills/refactor/
+    - assets/bundled_skills/i18n/

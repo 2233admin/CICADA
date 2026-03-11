@@ -2,6 +2,38 @@ import 'dart:async';
 import 'dart:io';
 
 class InstallerService {
+  static String? _openclawPath;
+
+  /// Resolve full path to openclaw binary.
+  /// GUI apps on Windows may not inherit npm global PATH.
+  static Future<String> _resolveOpenClawPath() async {
+    if (_openclawPath != null) return _openclawPath!;
+    if (Platform.isWindows) {
+      try {
+        final result = await Process.run('where', ['openclaw'], runInShell: true);
+        if (result.exitCode == 0) {
+          final path = (result.stdout as String).trim().split('\n').first.trim();
+          if (path.isNotEmpty) {
+            _openclawPath = path;
+            return path;
+          }
+        }
+      } catch (_) {}
+      final home = Platform.environment['USERPROFILE'] ?? '';
+      final candidates = [
+        '$home\\AppData\\Roaming\\npm\\openclaw.cmd',
+        '$home\\AppData\\Local\\pnpm\\openclaw.cmd',
+      ];
+      for (final c in candidates) {
+        if (await File(c).exists()) {
+          _openclawPath = c;
+          return c;
+        }
+      }
+    }
+    return 'openclaw';
+  }
+
   static Future<ProcessResult> checkNode() async {
     try {
       return await Process.run('node', ['--version'], runInShell: true);
@@ -12,7 +44,8 @@ class InstallerService {
 
   static Future<ProcessResult> checkOpenClaw() async {
     try {
-      return await Process.run('openclaw', ['--version'], runInShell: true);
+      final bin = await _resolveOpenClawPath();
+      return await Process.run(bin, ['--version'], runInShell: true);
     } catch (e) {
       return ProcessResult(0, 1, '', e.toString());
     }
@@ -46,20 +79,34 @@ class InstallerService {
     throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
   }
 
+  /// Detect available package manager: pnpm > npm
+  static Future<String> _detectPkgManager() async {
+    try {
+      final result = await Process.run('pnpm', ['--version'], runInShell: true);
+      if (result.exitCode == 0) return 'pnpm';
+    } catch (_) {}
+    return 'npm';
+  }
+
   static Future<Process> installOpenClaw({String? mirrorUrl}) async {
-    final args = ['install', '-g', 'openclaw'];
+    final pm = await _detectPkgManager();
+    final args = pm == 'pnpm'
+        ? ['add', '-g', 'openclaw']
+        : ['install', '-g', 'openclaw'];
     if (mirrorUrl != null) {
       args.addAll(['--registry', mirrorUrl]);
     }
-    return Process.start('npm', args, runInShell: true);
+    return Process.start(pm, args, runInShell: true);
   }
 
   static Future<ProcessResult> startService() async {
-    return Process.run('openclaw', ['start'], runInShell: true);
+    final bin = await _resolveOpenClawPath();
+    return Process.run(bin, ['start'], runInShell: true);
   }
 
   static Future<ProcessResult> stopService() async {
-    return Process.run('openclaw', ['stop'], runInShell: true);
+    final bin = await _resolveOpenClawPath();
+    return Process.run(bin, ['stop'], runInShell: true);
   }
 
   /// Check if OpenClaw service is running by probing its HTTP port

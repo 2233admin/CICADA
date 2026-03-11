@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app/theme/cicada_colors.dart';
 import '../services/preset_service.dart';
 import '../services/config_service.dart';
 
@@ -20,7 +21,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadData();
   }
 
@@ -71,10 +72,10 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: const Color(0xFF161B22),
+          backgroundColor: CicadaColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFF30363D)),
+            side: const BorderSide(color: CicadaColors.border),
           ),
           title: Text('配置 ${provider['name']}'),
           content: SizedBox(
@@ -85,7 +86,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
               children: [
                 Text(
                   'API Base: ${provider['apiBase']}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
                 ),
                 const SizedBox(height: 16),
                 if (!isOllama) ...[
@@ -100,15 +101,15 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                   const SizedBox(height: 16),
                 ] else ...[
                   if (_ollamaModels.isNotEmpty) ...[
-                    Text('检测到本地模型:', style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                    Text('检测到本地模型:', style: TextStyle(color: CicadaColors.textSecondary, fontSize: 13)),
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
                       children: _ollamaModels.map((m) => Chip(
                         label: Text(m, style: const TextStyle(fontSize: 11)),
-                        backgroundColor: const Color(0xFF0D1117),
-                        side: const BorderSide(color: Color(0xFF30363D)),
+                        backgroundColor: CicadaColors.background,
+                        side: const BorderSide(color: CicadaColors.border),
                         padding: EdgeInsets.zero,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       )).toList(),
@@ -116,7 +117,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                     const SizedBox(height: 16),
                   ] else ...[
                     Text('未检测到 Ollama 本地模型，请先安装 Ollama 并下载模型。',
-                        style: TextStyle(color: Colors.orange[300], fontSize: 13)),
+                        style: TextStyle(color: CicadaColors.accent, fontSize: 13)),
                     const SizedBox(height: 16),
                   ],
                 ],
@@ -168,7 +169,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                           : const Icon(Icons.wifi_tethering, size: 16),
                       label: Text(testing ? '测试中...' : '测试连接'),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF30363D)),
+                        side: const BorderSide(color: CicadaColors.border),
                       ),
                     ),
                     if (testResult != null) ...[
@@ -178,7 +179,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                           testResult!,
                           style: TextStyle(
                             fontSize: 13,
-                            color: testResult!.startsWith('✓') ? Colors.green : Colors.red,
+                            color: testResult!.startsWith('✓') ? CicadaColors.ok : CicadaColors.alert,
                           ),
                         ),
                       ),
@@ -191,7 +192,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                     onTap: () => launchUrl(Uri.parse(provider['keyUrl'])),
                     child: Text(
                       '获取 API Key \u2192',
-                      style: TextStyle(color: Colors.blue[300], fontSize: 13),
+                      style: const TextStyle(color: CicadaColors.energy, fontSize: 13),
                     ),
                   ),
                 ],
@@ -209,11 +210,11 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                   await ConfigService.removeProvider(provider['id']);
                   if (ctx.mounted) Navigator.pop(ctx, '__removed__');
                 },
-                child: const Text('删除', style: TextStyle(color: Colors.red)),
+                child: const Text('删除', style: TextStyle(color: CicadaColors.alert)),
               ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, '$selectedModel|||${controller.text}'),
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
+              style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
               child: const Text('保存'),
             ),
           ],
@@ -255,30 +256,31 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
               Row(
                 children: [
                   const Text(
-                    '模型配置',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    'MODEL CONFIG',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2.0),
                   ),
                   const Spacer(),
                   if (_configuredIds.isNotEmpty)
                     Text(
                       '已配置 ${_configuredIds.length} 个供应商',
-                      style: TextStyle(color: Colors.green[300], fontSize: 13),
+                      style: const TextStyle(color: CicadaColors.ok, fontSize: 13),
                     ),
                 ],
               ),
               const SizedBox(height: 8),
               Text('配置 AI 模型提供商 — 保存后自动写入 openclaw.json',
-                  style: TextStyle(color: Colors.grey[500])),
+                  style: TextStyle(color: CicadaColors.textSecondary)),
               const SizedBox(height: 24),
               TabBar(
                 controller: _tabController,
                 tabs: const [
                   Tab(text: '国产模型'),
                   Tab(text: '海外模型'),
+                  Tab(text: '自定义'),
                 ],
-                indicatorColor: const Color(0xFF7C3AED),
-                labelColor: const Color(0xFF7C3AED),
-                unselectedLabelColor: Colors.grey[500],
+                indicatorColor: CicadaColors.data,
+                labelColor: CicadaColors.data,
+                unselectedLabelColor: CicadaColors.textSecondary,
               ),
             ],
           ),
@@ -289,6 +291,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
             children: [
               _buildProviderGrid(_cnProviders),
               _buildProviderGrid(_intlProviders),
+              _buildCustomProviderTab(),
             ],
           ),
         ),
@@ -317,13 +320,191 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildCustomProviderTab() {
+    // Get custom providers from config
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _loadCustomProviders(),
+      builder: (context, snapshot) {
+        final customs = snapshot.data ?? [];
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('自定义供应商', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: CicadaColors.textPrimary)),
+                  const Spacer(),
+                  FilledButton.icon(
+                    onPressed: () => _showAddCustomDialog(),
+                    icon: const Icon(Icons.add),
+                    label: const Text('添加供应商'),
+                    style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('添加任意 OpenAI 兼容 API 的供应商', style: TextStyle(color: CicadaColors.textSecondary, fontSize: 13)),
+              const SizedBox(height: 16),
+              if (customs.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 48),
+                    child: Column(
+                      children: [
+                        Icon(Icons.add_circle_outline, size: 48, color: CicadaColors.textTertiary),
+                        const SizedBox(height: 12),
+                        Text('暂无自定义供应商', style: TextStyle(color: CicadaColors.textSecondary)),
+                        const SizedBox(height: 4),
+                        Text('点击上方按钮添加任意 OpenAI 兼容 API', style: TextStyle(color: CicadaColors.textTertiary, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ...customs.map((p) {
+                  final configured = _configuredIds.contains(p['id']);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildProviderCard(p, configured),
+                  );
+                }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _loadCustomProviders() async {
+    final config = await ConfigService.readConfig();
+    final customs = config['customProviders'] as List<dynamic>?;
+    if (customs == null) return [];
+    return customs.cast<Map<String, dynamic>>();
+  }
+
+  Future<void> _showAddCustomDialog() async {
+    final nameCtrl = TextEditingController();
+    final baseCtrl = TextEditingController();
+    final keyCtrl = TextEditingController();
+    final modelCtrl = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: CicadaColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: CicadaColors.border),
+        ),
+        title: const Text('添加自定义供应商'),
+        content: SizedBox(
+          width: 450,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: '供应商名称',
+                  hintText: '例: 我的代理',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: baseCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'API Base URL',
+                  hintText: 'https://api.example.com/v1',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: keyCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'API Key',
+                  hintText: 'sk-...',
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: modelCtrl,
+                decoration: const InputDecoration(
+                  labelText: '模型 ID',
+                  hintText: '例: gpt-4o, claude-sonnet-4',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '支持所有 OpenAI 兼容 API（中转站、私有部署等）',
+                style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
+            child: const Text('添加'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true) return;
+    final name = nameCtrl.text.trim();
+    final base = baseCtrl.text.trim();
+    final key = keyCtrl.text.trim();
+    final model = modelCtrl.text.trim();
+    if (name.isEmpty || base.isEmpty || model.isEmpty) return;
+
+    final id = 'custom-${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}';
+
+    // Save to customProviders list in config
+    final config = await ConfigService.readConfig();
+    final customs = (config['customProviders'] as List<dynamic>?) ?? [];
+    customs.add({
+      'id': id,
+      'name': name,
+      'provider': 'openai-compatible',
+      'description': base,
+      'apiBase': base,
+      'models': [
+        {'id': model, 'name': model, 'context': 128000}
+      ],
+      'keyUrl': '',
+      'freeQuota': '',
+    });
+    config['customProviders'] = customs;
+    await ConfigService.writeConfig(config);
+
+    // Also save as active provider
+    if (key.isNotEmpty) {
+      await ConfigService.setProvider(
+        providerId: id,
+        apiKey: key,
+        apiBase: base,
+        defaultModel: model,
+      );
+      setState(() => _configuredIds.add(id));
+    }
+
+    setState(() {}); // Refresh
+  }
+
   Widget _buildProviderCard(Map<String, dynamic> provider, bool configured) {
     final freeQuota = provider['freeQuota'] as String? ?? '';
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: configured ? Colors.green.withValues(alpha: 0.5) : const Color(0xFF30363D),
+          color: configured ? CicadaColors.ok.withValues(alpha: 0.5) : CicadaColors.border,
         ),
       ),
       child: Padding(
@@ -340,13 +521,13 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                   ),
                 ),
                 if (configured)
-                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  const Icon(Icons.check_circle, color: CicadaColors.ok, size: 20),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               provider['description'],
-              style: TextStyle(fontSize: 13, color: Colors.grey[400]),
+              style: TextStyle(fontSize: 13, color: CicadaColors.textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -354,7 +535,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
             if (freeQuota.isNotEmpty)
               Chip(
                 label: Text(freeQuota, style: const TextStyle(fontSize: 11)),
-                backgroundColor: Colors.green.withValues(alpha: 0.15),
+                backgroundColor: CicadaColors.ok.withValues(alpha: 0.15),
                 side: BorderSide.none,
                 padding: EdgeInsets.zero,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -368,8 +549,8 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                     onPressed: () => _showConfigDialog(provider),
                     style: FilledButton.styleFrom(
                       backgroundColor: configured
-                          ? const Color(0xFF30363D)
-                          : const Color(0xFF7C3AED),
+                          ? CicadaColors.border
+                          : CicadaColors.data,
                     ),
                     child: Text(configured ? '修改配置' : '配置'),
                   ),
@@ -381,7 +562,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                     icon: const Icon(Icons.open_in_new, size: 18),
                     tooltip: '获取 Key',
                     style: IconButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF30363D)),
+                      side: const BorderSide(color: CicadaColors.border),
                     ),
                   ),
                 ],
