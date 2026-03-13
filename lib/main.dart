@@ -24,7 +24,9 @@ void main() async {
 }
 
 class CicadaApp extends StatelessWidget {
-  const CicadaApp({super.key});
+  final Widget? home;
+
+  const CicadaApp({super.key, this.home});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class CicadaApp extends StatelessWidget {
       title: '知了猴',
       debugShowCheckedModeBanner: false,
       theme: CicadaTheme.dark,
-      home: const HomePage(),
+      home: home ?? const HomePage(),
     );
   }
 }
