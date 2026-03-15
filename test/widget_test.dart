@@ -5,6 +5,8 @@ import 'package:cicada/main.dart';
 void main() {
   testWidgets('CicadaApp renders', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: CicadaApp()));
+    // Wait a bit for widget to render
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('CICADA'), findsOneWidget);
   });
 }

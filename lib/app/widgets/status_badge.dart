@@ -104,9 +104,12 @@ class _StatusBadgeState extends State<StatusBadge>
                 ),
               ),
         const SizedBox(width: 8),
-        Text(
-          widget.label,
-          style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
+        Flexible(
+          child: Text(
+            widget.label,
+            style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
