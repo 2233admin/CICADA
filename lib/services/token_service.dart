@@ -37,7 +37,8 @@ class TokenService {
 
   /// Get possible log directories based on platform.
   static List<String> _getLogDirectories() {
-    final home = Platform.environment['HOME'] ??
+    final home =
+        Platform.environment['HOME'] ??
         Platform.environment['USERPROFILE'] ??
         '';
 
@@ -49,10 +50,7 @@ class TokenService {
       ];
     } else if (Platform.isWindows) {
       final localAppData = Platform.environment['LOCALAPPDATA'] ?? home;
-      return [
-        '$home\\.openclaw\\logs',
-        '$localAppData\\OpenClaw\\logs',
-      ];
+      return ['$home\\.openclaw\\logs', '$localAppData\\OpenClaw\\logs'];
     } else if (Platform.isLinux) {
       return [
         '$home/.openclaw/logs',
@@ -94,13 +92,15 @@ class TokenService {
         // Try to extract token usage
         final tokens = _extractTokens(line);
         if (tokens != null) {
-          records.add(TokenRecord(
-            timestamp: currentTimestamp ?? DateTime.now(),
-            model: tokens['model'] ?? 'unknown',
-            inputTokens: tokens['input'] ?? 0,
-            outputTokens: tokens['output'] ?? 0,
-            cacheTokens: tokens['cache'] ?? 0,
-          ));
+          records.add(
+            TokenRecord(
+              timestamp: currentTimestamp ?? DateTime.now(),
+              model: tokens['model'] ?? 'unknown',
+              inputTokens: tokens['input'] ?? 0,
+              outputTokens: tokens['output'] ?? 0,
+              cacheTokens: tokens['cache'] ?? 0,
+            ),
+          );
         }
       }
     } catch (e) {
@@ -232,13 +232,13 @@ class TokenService {
 
     // Sort daily usage by date
     final sortedDays = dailyUsage.keys.toList()..sort();
-    final trendData = sortedDays.map((d) => DailyUsage(d, dailyUsage[d]!)).toList();
+    final trendData =
+        sortedDays.map((d) => DailyUsage(d, dailyUsage[d]!)).toList();
 
     // Model distribution sorted by usage
-    final modelDistribution = modelCounts.entries
-        .map((e) => ModelUsage(e.key, e.value))
-        .toList()
-      ..sort((a, b) => b.tokens.compareTo(a.tokens));
+    final modelDistribution =
+        modelCounts.entries.map((e) => ModelUsage(e.key, e.value)).toList()
+          ..sort((a, b) => b.tokens.compareTo(a.tokens));
 
     return TokenStatistics(
       totalRecords: records.length,
@@ -258,7 +258,10 @@ class TokenService {
   }
 
   /// Get recent records (last N).
-  static List<TokenRecord> getRecentRecords(List<TokenRecord> records, int count) {
+  static List<TokenRecord> getRecentRecords(
+    List<TokenRecord> records,
+    int count,
+  ) {
     return records.take(count).toList();
   }
 
@@ -293,7 +296,8 @@ class TokenStatistics {
   final DateTime? firstRecordDate;
   final DateTime? lastRecordDate;
 
-  int get totalTokens => totalInputTokens + totalOutputTokens + totalCacheTokens;
+  int get totalTokens =>
+      totalInputTokens + totalOutputTokens + totalCacheTokens;
   int get averageTokensPerRequest =>
       totalRecords > 0 ? totalTokens ~/ totalRecords : 0;
 
@@ -309,14 +313,14 @@ class TokenStatistics {
   });
 
   const TokenStatistics.empty()
-      : totalRecords = 0,
-        totalInputTokens = 0,
-        totalOutputTokens = 0,
-        totalCacheTokens = 0,
-        modelDistribution = const [],
-        dailyTrend = const [],
-        firstRecordDate = null,
-        lastRecordDate = null;
+    : totalRecords = 0,
+      totalInputTokens = 0,
+      totalOutputTokens = 0,
+      totalCacheTokens = 0,
+      modelDistribution = const [],
+      dailyTrend = const [],
+      firstRecordDate = null,
+      lastRecordDate = null;
 }
 
 /// Model usage breakdown.

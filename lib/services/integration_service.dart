@@ -54,10 +54,7 @@ class FeishuService {
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/v3/tenant_access_token/internal'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'app_id': appId,
-          'app_secret': appSecret,
-        }),
+        body: jsonEncode({'app_id': appId, 'app_secret': appSecret}),
       );
 
       if (response.statusCode == 200) {
@@ -205,13 +202,13 @@ class FeishuTokenResult {
   final String? error;
 
   FeishuTokenResult.success({required this.token, required this.expire})
-      : success = true,
-        error = null;
+    : success = true,
+      error = null;
 
   FeishuTokenResult.error(this.error)
-      : success = false,
-        token = null,
-        expire = null;
+    : success = false,
+      token = null,
+      expire = null;
 }
 
 /// Test connection result.
@@ -222,12 +219,12 @@ class FeishuTestResult {
   final int latency;
 
   FeishuTestResult.success({this.botName, required this.latency})
-      : success = true,
-        error = null;
+    : success = true,
+      error = null;
 
   FeishuTestResult.failure(this.error, this.latency)
-      : success = false,
-        botName = null;
+    : success = false,
+      botName = null;
 }
 
 /// Placeholder for future integrations (QQ, DingTalk).

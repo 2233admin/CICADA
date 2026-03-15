@@ -8,6 +8,11 @@ import 'skills_page.dart';
 import 'settings_page.dart';
 import 'diagnostic_page.dart';
 import 'token_page.dart';
+import 'chat_page.dart';
+import 'sessions_page.dart';
+import 'channels_page.dart';
+import 'logs_page.dart';
+import 'memory_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +34,11 @@ class _HomePageState extends State<HomePage> {
   static const _navItems = [
     _NavItem(Icons.dashboard, '仪表盘'),
     _NavItem(Icons.download, '安装向导'),
+    _NavItem(Icons.chat, 'Agent对话'),
+    _NavItem(Icons.history, '会话管理'),
+    _NavItem(Icons.hub, '渠道管理'),
+    _NavItem(Icons.terminal, '日志查看'),
+    _NavItem(Icons.memory, '记忆搜索'),
     _NavItem(Icons.smart_toy, '模型配置'),
     _NavItem(Icons.extension, '技能商店'),
     _NavItem(Icons.analytics, 'Token分析'),
@@ -73,14 +83,24 @@ class _HomePageState extends State<HomePage> {
           onSetupComplete: () => _navigateTo(2),
         );
       case 2:
-        return const ModelsPage(key: ValueKey('models'));
+        return const ChatPage(key: ValueKey('chat'));
       case 3:
-        return const SkillsPage(key: ValueKey('skills'));
+        return const SessionsPage(key: ValueKey('sessions'));
       case 4:
-        return const TokenPage(key: ValueKey('token'));
+        return const ChannelsPage(key: ValueKey('channels'));
       case 5:
-        return const DiagnosticPage(key: ValueKey('diagnostic'));
+        return const LogsPage(key: ValueKey('logs'));
       case 6:
+        return const MemoryPage(key: ValueKey('memory'));
+      case 7:
+        return const ModelsPage(key: ValueKey('models'));
+      case 8:
+        return const SkillsPage(key: ValueKey('skills'));
+      case 9:
+        return const TokenPage(key: ValueKey('token'));
+      case 10:
+        return const DiagnosticPage(key: ValueKey('diagnostic'));
+      case 11:
         return const SettingsPage(key: ValueKey('settings'));
       default:
         return const SizedBox.shrink();
@@ -135,9 +155,10 @@ class _HomePageState extends State<HomePage> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child: Material(
-                    color: selected
-                        ? CicadaColors.data.withValues(alpha: 0.12)
-                        : Colors.transparent,
+                    color:
+                        selected
+                            ? CicadaColors.data.withValues(alpha: 0.12)
+                            : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(6),
@@ -159,21 +180,24 @@ class _HomePageState extends State<HomePage> {
                             Icon(
                               item.icon,
                               size: 18,
-                              color: selected
-                                  ? CicadaColors.accent
-                                  : CicadaColors.textTertiary,
+                              color:
+                                  selected
+                                      ? CicadaColors.accent
+                                      : CicadaColors.textTertiary,
                             ),
                             const SizedBox(width: 12),
                             Text(
                               item.label,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: selected
-                                    ? CicadaColors.textPrimary
-                                    : CicadaColors.textSecondary,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                                color:
+                                    selected
+                                        ? CicadaColors.textPrimary
+                                        : CicadaColors.textSecondary,
+                                fontWeight:
+                                    selected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
                               ),
                             ),
                           ],

@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import '../app/theme/cicada_colors.dart';
 import '../services/bundled_skill_service.dart';
@@ -42,12 +40,12 @@ class SkillModel {
   }
 
   SkillModel copyWith({bool? isBundled}) => SkillModel(
-        name: name,
-        description: description,
-        author: author,
-        downloads: downloads,
-        isBundled: isBundled ?? this.isBundled,
-      );
+    name: name,
+    description: description,
+    author: author,
+    downloads: downloads,
+    isBundled: isBundled ?? this.isBundled,
+  );
 }
 
 class SkillsPage extends StatefulWidget {
@@ -83,26 +81,13 @@ class _SkillsPageState extends State<SkillsPage> {
   Future<void> _fetchSkills() async {
     // Layer 1: load bundled manifest first (offline-first)
     final bundled = await BundledSkillService.loadManifest();
-    final bundledMap = {for (final m in bundled) m.name: SkillModel.fromBundled(m)};
+    final bundledMap = {
+      for (final m in bundled) m.name: SkillModel.fromBundled(m),
+    };
     _bundledNames = bundledMap.keys.toSet();
 
-    // Layer 2: fetch remote skills
+    // Load bundled skills only (local mode)
     List<SkillModel> remote = [];
-    try {
-      final uri = Uri.parse('https://registry.clawhub.org/api/v1/skills').replace(
-        queryParameters: {
-          'page': '1',
-          'limit': '20',
-          if (_search.isNotEmpty) 'search': _search,
-        },
-      );
-      final resp = await http.get(uri).timeout(const Duration(seconds: 8));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final List<dynamic> items = data['skills'] ?? data['data'] ?? (data is List ? data : []);
-        remote = items.map((e) => SkillModel.fromJson(e as Map<String, dynamic>)).toList();
-      }
-    } catch (_) {}
 
     // Merge: remote skills annotated with bundled flag; bundled-only skills appended
     final merged = <String, SkillModel>{};
@@ -114,7 +99,8 @@ class _SkillsPageState extends State<SkillsPage> {
     }
 
     // If both remote and bundled are empty, use static fallback with bundled flags
-    final result = merged.isEmpty ? _buildFallback(bundledMap) : merged.values.toList();
+    final result =
+        merged.isEmpty ? _buildFallback(bundledMap) : merged.values.toList();
 
     if (mounted) {
       setState(() {
@@ -127,40 +113,28 @@ class _SkillsPageState extends State<SkillsPage> {
 
   List<SkillModel> _buildFallback(Map<String, SkillModel> bundledMap) {
     const fallback = [
-      ('code-review', '自动化代码质量检查与审查建议', 'clawhub', 12400),
-      ('doc-gen', '从代码自动生成 API 文档', 'clawhub', 8900),
-      ('test-helper', '自动生成单元测试用例', 'clawhub', 7300),
-      ('i18n', '多语言国际化翻译支持', 'clawhub', 5100),
-      ('git-helper', '智能 commit message 生成', 'clawhub', 9800),
-      ('refactor', '代码重构与优化建议', 'clawhub', 6200),
+      ('code-review', '自动化代码质量检查与审查建议', 'CICADA', 0),
+      ('doc-gen', '从代码自动生成 API 文档', 'CICADA', 0),
+      ('test-helper', '自动生成单元测试用例', 'CICADA', 0),
+      ('i18n', '多语言国际化翻译支持', 'CICADA', 0),
+      ('git-helper', '智能 commit message 生成', 'CICADA', 0),
+      ('refactor', '代码重构与优化建议', 'CICADA', 0),
     ];
     return fallback
-        .map((r) => SkillModel(
-              name: r.$1,
-              description: r.$2,
-              author: r.$3,
-              downloads: r.$4,
-              isBundled: _bundledNames.contains(r.$1),
-            ))
+        .map(
+          (r) => SkillModel(
+            name: r.$1,
+            description: r.$2,
+            author: r.$3,
+            downloads: r.$4,
+            isBundled: _bundledNames.contains(r.$1),
+          ),
+        )
         .toList();
   }
 
   Future<void> _loadInstalled() async {
-    // Check clawhub CLI
-    try {
-      final result = await Process.run('clawhub', ['list'], runInShell: true);
-      if (result.exitCode == 0) {
-        final lines = (result.stdout as String).split('\n');
-        final names = lines
-            .map((l) => l.trim().split(RegExp(r'\s+')).first)
-            .where((s) => s.isNotEmpty)
-            .toSet();
-        if (mounted) setState(() => _installed = names);
-        return;
-      }
-    } catch (_) {}
-
-    // Fallback: check filesystem for bundled-installed skills
+    // Load installed skills from bundled skills directory
     final bundled = await BundledSkillService.loadManifest();
     final installedSet = <String>{};
     for (final meta in bundled) {
@@ -177,12 +151,15 @@ class _SkillsPageState extends State<SkillsPage> {
       base = List.of(_allSkills);
     } else {
       final q = _search.toLowerCase();
-      base = _allSkills
-          .where((s) =>
-              s.name.toLowerCase().contains(q) ||
-              s.description.toLowerCase().contains(q) ||
-              s.author.toLowerCase().contains(q))
-          .toList();
+      base =
+          _allSkills
+              .where(
+                (s) =>
+                    s.name.toLowerCase().contains(q) ||
+                    s.description.toLowerCase().contains(q) ||
+                    s.author.toLowerCase().contains(q),
+              )
+              .toList();
     }
 
     // Category filter
@@ -194,29 +171,37 @@ class _SkillsPageState extends State<SkillsPage> {
         base = base.where((s) => _installed.contains(s.name)).toList();
         break;
       case '代码质量':
-        base = base
-            .where((s) =>
-                s.name.contains('review') ||
-                s.name.contains('refactor') ||
-                s.description.contains('质量') ||
-                s.description.contains('重构'))
-            .toList();
+        base =
+            base
+                .where(
+                  (s) =>
+                      s.name.contains('review') ||
+                      s.name.contains('refactor') ||
+                      s.description.contains('质量') ||
+                      s.description.contains('重构'),
+                )
+                .toList();
         break;
       case '文档':
-        base = base
-            .where((s) =>
-                s.name.contains('doc') ||
-                s.name.contains('i18n') ||
-                s.description.contains('文档') ||
-                s.description.contains('翻译'))
-            .toList();
+        base =
+            base
+                .where(
+                  (s) =>
+                      s.name.contains('doc') ||
+                      s.name.contains('i18n') ||
+                      s.description.contains('文档') ||
+                      s.description.contains('翻译'),
+                )
+                .toList();
         break;
       case '测试':
-        base = base
-            .where((s) =>
-                s.name.contains('test') ||
-                s.description.contains('测试'))
-            .toList();
+        base =
+            base
+                .where(
+                  (s) =>
+                      s.name.contains('test') || s.description.contains('测试'),
+                )
+                .toList();
         break;
       default:
         break;
@@ -250,10 +235,8 @@ class _SkillsPageState extends State<SkillsPage> {
         final manifest = await BundledSkillService.loadManifest();
         final meta = manifest.firstWhere((m) => m.name == skill.name);
         await BundledSkillService.installBundled(meta);
-      } else {
-        final process = await Process.start('clawhub', ['install', skill.name], runInShell: true);
-        await process.exitCode;
       }
+      // Note: Non-bundled skills not supported in local mode
       await _loadInstalled();
     } catch (_) {}
     if (mounted) setState(() => _installing.remove(skill.name));
@@ -262,8 +245,13 @@ class _SkillsPageState extends State<SkillsPage> {
   Future<void> _uninstall(SkillModel skill) async {
     setState(() => _installing.add(skill.name));
     try {
-      final process = await Process.start('clawhub', ['uninstall', skill.name], runInShell: true);
-      await process.exitCode;
+      // Uninstall bundled skill by removing from Claude skills directory
+      final skillDir = Directory(
+        '${Platform.environment['HOME']}/.claude/skills/${skill.name}',
+      );
+      if (await skillDir.exists()) {
+        await skillDir.delete(recursive: true);
+      }
       await _loadInstalled();
     } catch (_) {}
     if (mounted) setState(() => _installing.remove(skill.name));
@@ -327,26 +315,38 @@ class _SkillsPageState extends State<SkillsPage> {
                   const Spacer(),
                   _syncing
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: CicadaColors.accent,
-                          ),
-                        )
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: CicadaColors.accent,
+                        ),
+                      )
                       : OutlinedButton.icon(
-                          onPressed: _syncBundled,
-                          icon: const Icon(Icons.download_for_offline_outlined, size: 16),
-                          label: const Text('同步内置技能', style: TextStyle(fontSize: 12)),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: CicadaColors.accent,
-                            side: const BorderSide(color: CicadaColors.accent, width: 1),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                        onPressed: _syncBundled,
+                        icon: const Icon(
+                          Icons.download_for_offline_outlined,
+                          size: 16,
+                        ),
+                        label: const Text(
+                          '同步内置技能',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: CicadaColors.accent,
+                          side: const BorderSide(
+                            color: CicadaColors.accent,
+                            width: 1,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
+                      ),
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: CicadaColors.muted),
@@ -368,13 +368,20 @@ class _SkillsPageState extends State<SkillsPage> {
                 ),
                 decoration: InputDecoration(
                   hintText: '输入技能名称或关键词...',
-                  hintStyle: const TextStyle(color: CicadaColors.textTertiary, fontFamily: 'monospace'),
+                  hintStyle: const TextStyle(
+                    color: CicadaColors.textTertiary,
+                    fontFamily: 'monospace',
+                  ),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.search, color: CicadaColors.accent, size: 16),
+                        const Icon(
+                          Icons.search,
+                          color: CicadaColors.accent,
+                          size: 16,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'SEARCH //',
@@ -401,9 +408,15 @@ class _SkillsPageState extends State<SkillsPage> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(4),
-                    borderSide: const BorderSide(color: CicadaColors.accent, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: CicadaColors.accent,
+                      width: 1.5,
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 8,
+                  ),
                 ),
                 onChanged: _onSearch,
               ),
@@ -412,44 +425,52 @@ class _SkillsPageState extends State<SkillsPage> {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: _categories.map((cat) {
-                    final selected = _categoryFilter == cat;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(
-                          cat,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontFamily: 'monospace',
-                            letterSpacing: 0.5,
-                            color: selected ? CicadaColors.background : CicadaColors.textSecondary,
+                  children:
+                      _categories.map((cat) {
+                        final selected = _categoryFilter == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(
+                              cat,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontFamily: 'monospace',
+                                letterSpacing: 0.5,
+                                color:
+                                    selected
+                                        ? CicadaColors.background
+                                        : CicadaColors.textSecondary,
+                              ),
+                            ),
+                            selected: selected,
+                            onSelected: (_) {
+                              setState(() {
+                                _categoryFilter = cat;
+                                _applyFilter();
+                              });
+                            },
+                            selectedColor: CicadaColors.accent,
+                            backgroundColor: CicadaColors.surface,
+                            side: BorderSide(
+                              color:
+                                  selected
+                                      ? CicadaColors.accent
+                                      : CicadaColors.border,
+                              width: 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            showCheckmark: false,
                           ),
-                        ),
-                        selected: selected,
-                        onSelected: (_) {
-                          setState(() {
-                            _categoryFilter = cat;
-                            _applyFilter();
-                          });
-                        },
-                        selectedColor: CicadaColors.accent,
-                        backgroundColor: CicadaColors.surface,
-                        side: BorderSide(
-                          color: selected
-                              ? CicadaColors.accent
-                              : CicadaColors.border,
-                          width: 1,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        visualDensity: VisualDensity.compact,
-                        showCheckmark: false,
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ),
               const SizedBox(height: 20),
@@ -457,61 +478,65 @@ class _SkillsPageState extends State<SkillsPage> {
           ),
         ),
         Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator(color: CicadaColors.data))
-              : _filtered.isEmpty
+          child:
+              _loading
+                  ? const Center(
+                    child: CircularProgressIndicator(color: CicadaColors.data),
+                  )
+                  : _filtered.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.gps_fixed,
-                            size: 56,
-                            color: CicadaColors.border,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.gps_fixed,
+                          size: 56,
+                          color: CicadaColors.border,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'NO TARGETS FOUND',
+                          style: TextStyle(
+                            color: CicadaColors.textSecondary,
+                            fontSize: 18,
+                            fontFamily: 'monospace',
+                            letterSpacing: 3,
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'NO TARGETS FOUND',
-                            style: TextStyle(
-                              color: CicadaColors.textSecondary,
-                              fontSize: 18,
-                              fontFamily: 'monospace',
-                              letterSpacing: 3,
-                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '调整搜索条件或浏览全部技能',
+                          style: TextStyle(
+                            color: CicadaColors.textTertiary,
+                            fontSize: 13,
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            '调整搜索条件或浏览全部技能',
-                            style: TextStyle(
-                              color: CicadaColors.textTertiary,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 340,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        mainAxisExtent: 210,
-                      ),
-                      itemCount: _filtered.length,
-                      itemBuilder: (context, i) {
-                        final skill = _filtered[i];
-                        final isInstalled = _installed.contains(skill.name);
-                        final isInstalling = _installing.contains(skill.name);
-                        return _SkillCard(
-                          skill: skill,
-                          isInstalled: isInstalled,
-                          isInstalling: isInstalling,
-                          onInstall: () => _install(skill),
-                          onUninstall: () => _uninstall(skill),
-                        );
-                      },
+                        ),
+                      ],
                     ),
+                  )
+                  : GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 340,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          mainAxisExtent: 210,
+                        ),
+                    itemCount: _filtered.length,
+                    itemBuilder: (context, i) {
+                      final skill = _filtered[i];
+                      final isInstalled = _installed.contains(skill.name);
+                      final isInstalling = _installing.contains(skill.name);
+                      return _SkillCard(
+                        skill: skill,
+                        isInstalled: isInstalled,
+                        isInstalling: isInstalling,
+                        onInstall: () => _install(skill),
+                        onUninstall: () => _uninstall(skill),
+                      );
+                    },
+                  ),
         ),
       ],
     );
@@ -522,10 +547,11 @@ class _SkillsPageState extends State<SkillsPage> {
 class _DiagonalStripesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.05)
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
 
     const gap = 10.0;
     const extent = 48.0;
@@ -551,18 +577,27 @@ class _CornerBracketsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = color
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
 
     const len = 6.0;
     // Top-left
     canvas.drawLine(const Offset(0, len), const Offset(0, 0), paint);
     canvas.drawLine(const Offset(0, 0), const Offset(len, 0), paint);
     // Bottom-right
-    canvas.drawLine(Offset(size.width - len, size.height), Offset(size.width, size.height), paint);
-    canvas.drawLine(Offset(size.width, size.height - len), Offset(size.width, size.height), paint);
+    canvas.drawLine(
+      Offset(size.width - len, size.height),
+      Offset(size.width, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width, size.height - len),
+      Offset(size.width, size.height),
+      paint,
+    );
   }
 
   @override
@@ -638,11 +673,7 @@ class _SkillCard extends StatelessWidget {
                     // Header row
                     Row(
                       children: [
-                        Icon(
-                          Icons.extension,
-                          color: _accentColor,
-                          size: 18,
-                        ),
+                        Icon(Icons.extension, color: _accentColor, size: 18),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -683,7 +714,10 @@ class _SkillCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       skill.description,
-                      style: const TextStyle(fontSize: 11.5, color: CicadaColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: CicadaColors.textSecondary,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -691,28 +725,52 @@ class _SkillCard extends StatelessWidget {
                     // Meta row
                     Row(
                       children: [
-                        const Icon(Icons.person_outline, size: 11, color: CicadaColors.textTertiary),
+                        const Icon(
+                          Icons.person_outline,
+                          size: 11,
+                          color: CicadaColors.textTertiary,
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           skill.author,
-                          style: const TextStyle(fontSize: 10, color: CicadaColors.textTertiary, fontFamily: 'monospace'),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: CicadaColors.textTertiary,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                         if (skill.downloads > 0) ...[
                           const SizedBox(width: 10),
-                          const Icon(Icons.download_outlined, size: 11, color: CicadaColors.textTertiary),
+                          const Icon(
+                            Icons.download_outlined,
+                            size: 11,
+                            color: CicadaColors.textTertiary,
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             _formatDownloads(skill.downloads),
-                            style: const TextStyle(fontSize: 10, color: CicadaColors.textTertiary, fontFamily: 'monospace'),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: CicadaColors.textTertiary,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ],
                         if (skill.isBundled && skill.downloads == 0) ...[
                           const SizedBox(width: 6),
-                          Icon(Icons.offline_bolt_outlined, size: 11, color: CicadaColors.accent.withValues(alpha: 0.8)),
+                          Icon(
+                            Icons.offline_bolt_outlined,
+                            size: 11,
+                            color: CicadaColors.accent.withValues(alpha: 0.8),
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             'OFFLINE',
-                            style: TextStyle(fontSize: 10, color: CicadaColors.accent.withValues(alpha: 0.8), fontFamily: 'monospace'),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: CicadaColors.accent.withValues(alpha: 0.8),
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ],
                       ],
@@ -722,44 +780,70 @@ class _SkillCard extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       height: 30,
-                      child: isInstalling
-                          ? OutlinedButton(
-                              onPressed: null,
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: CicadaColors.border),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                              ),
-                              child: const SizedBox(
-                                width: 13,
-                                height: 13,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: CicadaColors.data,
-                                ),
-                              ),
-                            )
-                          : isInstalled
+                      child:
+                          isInstalling
                               ? OutlinedButton(
-                                  onPressed: onUninstall,
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: CicadaColors.border),
-                                    foregroundColor: CicadaColors.muted,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                                    textStyle: const TextStyle(fontSize: 11, fontFamily: 'monospace', letterSpacing: 1),
+                                onPressed: null,
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: CicadaColors.border,
                                   ),
-                                  child: const Text('[ REMOVE ]'),
-                                )
-                              : ElevatedButton(
-                                  onPressed: onInstall,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: skill.isBundled ? CicadaColors.accent : CicadaColors.data,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                                    textStyle: const TextStyle(fontSize: 11, fontFamily: 'monospace', letterSpacing: 1.5),
-                                    elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
                                   ),
-                                  child: Text(skill.isBundled ? '[ DEPLOY ]' : '[ ACQUIRE ]'),
                                 ),
+                                child: const SizedBox(
+                                  width: 13,
+                                  height: 13,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: CicadaColors.data,
+                                  ),
+                                ),
+                              )
+                              : isInstalled
+                              ? OutlinedButton(
+                                onPressed: onUninstall,
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: CicadaColors.border,
+                                  ),
+                                  foregroundColor: CicadaColors.muted,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontFamily: 'monospace',
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                child: const Text('[ REMOVE ]'),
+                              )
+                              : ElevatedButton(
+                                onPressed: onInstall,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      skill.isBundled
+                                          ? CicadaColors.accent
+                                          : CicadaColors.data,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontFamily: 'monospace',
+                                    letterSpacing: 1.5,
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  skill.isBundled
+                                      ? '[ DEPLOY ]'
+                                      : '[ ACQUIRE ]',
+                                ),
+                              ),
                     ),
                   ],
                 ),

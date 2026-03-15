@@ -29,18 +29,24 @@ class TerminalDialog extends StatefulWidget {
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
-      builder: (_) => ValueListenableBuilder<bool>(
-        valueListenable: running,
-        builder: (_, isRunning, __) => ValueListenableBuilder<List<String>>(
-          valueListenable: lines,
-          builder: (_, currentLines, __) => TerminalDialog(
-            title: title,
-            lines: currentLines,
-            running: isRunning,
-            onClose: isRunning ? null : () => Navigator.of(context).pop(),
+      builder:
+          (_) => ValueListenableBuilder<bool>(
+            valueListenable: running,
+            builder:
+                (_, isRunning, __) => ValueListenableBuilder<List<String>>(
+                  valueListenable: lines,
+                  builder:
+                      (_, currentLines, __) => TerminalDialog(
+                        title: title,
+                        lines: currentLines,
+                        running: isRunning,
+                        onClose:
+                            isRunning
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                      ),
+                ),
           ),
-        ),
-      ),
     );
   }
 
@@ -170,7 +176,9 @@ class _TerminalDialogState extends State<TerminalDialog> {
 
   Color _lineColor(String line) {
     final lower = line.toLowerCase();
-    if (lower.startsWith('错误') || lower.startsWith('error') || lower.contains('failed')) {
+    if (lower.startsWith('错误') ||
+        lower.startsWith('error') ||
+        lower.contains('failed')) {
       return CicadaColors.alert;
     }
     if (lower.contains('成功') || lower.contains('完成') || lower.contains('ok')) {

@@ -12,12 +12,14 @@ class CicadaColors {
   static const borderLight = Color(0xFF3A4A5A);
 
   // Semantic
-  static const accent = Color(0xFFFFB84D);      // Primary CTA, warnings
-  static const energy = Color(0xFF55D0FF);       // Online status, active
-  static const data = Color(0xFF7C3AED);         // Data, links, interactive
-  static const ok = Color(0xFF3FB950);           // Success, installed
-  static const alert = Color(0xFFFF7B72);        // Error, danger
-  static const muted = Color(0xFF8B949E);        // Secondary text
+  static const accent = Color(0xFFFFB84D); // Primary CTA, warnings
+  static const energy = Color(0xFF55D0FF); // Online status, active
+  static const data = Color(0xFF7C3AED); // Data, links, interactive
+  static const ok = Color(0xFF3FB950); // Success, installed
+  static const alert = Color(0xFFFF7B72); // Error, danger
+  static const error = Color(0xFFFF7B72); // Alias for alert
+  static const info = Color(0xFF55D0FF); // Alias for energy
+  static const muted = Color(0xFF8B949E); // Secondary text
 
   // Text
   static const textPrimary = Color(0xFFE6EDF3);

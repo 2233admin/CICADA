@@ -28,11 +28,11 @@ class _StatusBadgeState extends State<StatusBadge>
       widget.type == StatusType.online || widget.type == StatusType.loading;
 
   Color get _color => switch (widget.type) {
-        StatusType.online => CicadaColors.ok,
-        StatusType.offline => CicadaColors.alert,
-        StatusType.warning => CicadaColors.accent,
-        StatusType.loading => CicadaColors.energy,
-      };
+    StatusType.online => CicadaColors.ok,
+    StatusType.offline => CicadaColors.alert,
+    StatusType.warning => CicadaColors.accent,
+    StatusType.loading => CicadaColors.energy,
+  };
 
   @override
   void initState() {
@@ -41,9 +41,10 @@ class _StatusBadgeState extends State<StatusBadge>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
-    _pulse = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _pulse = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     if (_shouldAnimate) _controller.repeat(reverse: true);
   }
 
@@ -72,37 +73,35 @@ class _StatusBadgeState extends State<StatusBadge>
       children: [
         _shouldAnimate
             ? AnimatedBuilder(
-                animation: _pulse,
-                builder: (context, _) => Container(
-                  width: widget.size,
-                  height: widget.size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color,
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: _pulse.value * 0.8),
-                        blurRadius: 8 + _pulse.value * 6,
-                        spreadRadius: _pulse.value * 2,
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : Container(
-                width: widget.size,
-                height: widget.size,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.5),
-                      blurRadius: 6,
+              animation: _pulse,
+              builder:
+                  (context, _) => Container(
+                    width: widget.size,
+                    height: widget.size,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color,
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: _pulse.value * 0.8),
+                          blurRadius: 8 + _pulse.value * 6,
+                          spreadRadius: _pulse.value * 2,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+            )
+            : Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6),
+                ],
               ),
+            ),
         const SizedBox(width: 8),
         Flexible(
           child: Text(

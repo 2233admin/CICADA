@@ -11,7 +11,8 @@ class ModelsPage extends StatefulWidget {
   State<ModelsPage> createState() => _ModelsPageState();
 }
 
-class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateMixin {
+class _ModelsPageState extends State<ModelsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<dynamic> _cnProviders = [];
   List<dynamic> _intlProviders = [];
@@ -58,10 +59,12 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
     }
 
     // Default model selection
-    final models = (provider['models'] as List)
-        .map((m) => m as Map<String, dynamic>)
-        .toList();
-    String selectedModel = existing?['defaultModel'] as String? ??
+    final models =
+        (provider['models'] as List)
+            .map((m) => m as Map<String, dynamic>)
+            .toList();
+    String selectedModel =
+        existing?['defaultModel'] as String? ??
         (models.isNotEmpty ? models.first['id'] as String : '');
 
     if (!mounted) return;
@@ -71,156 +74,229 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
 
     final result = await showDialog<String>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: CicadaColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: CicadaColors.border),
-          ),
-          title: Text('配置 ${provider['name']}'),
-          content: SizedBox(
-            width: 450,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'API Base: ${provider['apiBase']}',
-                  style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                if (!isOllama) ...[
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: 'API Key',
-                      hintText: '输入你的 API Key',
-                    ),
-                    obscureText: true,
+      builder:
+          (ctx) => StatefulBuilder(
+            builder:
+                (ctx, setDialogState) => AlertDialog(
+                  backgroundColor: CicadaColors.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: CicadaColors.border),
                   ),
-                  const SizedBox(height: 16),
-                ] else ...[
-                  if (_ollamaModels.isNotEmpty) ...[
-                    Text('检测到本地模型:', style: TextStyle(color: CicadaColors.textSecondary, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: _ollamaModels.map((m) => Chip(
-                        label: Text(m, style: const TextStyle(fontSize: 11)),
-                        backgroundColor: CicadaColors.background,
-                        side: const BorderSide(color: CicadaColors.border),
-                        padding: EdgeInsets.zero,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      )).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                  ] else ...[
-                    Text('未检测到 Ollama 本地模型，请先安装 Ollama 并下载模型。',
-                        style: TextStyle(color: CicadaColors.accent, fontSize: 13)),
-                    const SizedBox(height: 16),
-                  ],
-                ],
-                // Model selector
-                DropdownButtonFormField<String>(
-                  initialValue: selectedModel,
-                  decoration: const InputDecoration(labelText: '默认模型'),
-                  items: [
-                    ...models.map((m) => DropdownMenuItem(
-                      value: m['id'] as String,
-                      child: Text(m['name'] as String),
-                    )),
-                    if (isOllama)
-                      ..._ollamaModels
-                          .where((m) => !models.any((pm) => pm['id'] == m))
-                          .map((m) => DropdownMenuItem(value: m, child: Text('$m (本地)'))),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setDialogState(() => selectedModel = v);
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Test connection button
-                Row(
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: testing
-                          ? null
-                          : () async {
-                              setDialogState(() {
-                                testing = true;
-                                testResult = null;
-                              });
-                              final (ok, msg) = await ConfigService.testConnection(
-                                apiBase: provider['apiBase'] as String,
-                                apiKey: controller.text.trim(),
-                                model: selectedModel,
-                                provider: provider['provider'] as String,
-                              );
-                              setDialogState(() {
-                                testing = false;
-                                testResult = '${ok ? "✓" : "✗"} $msg';
-                              });
-                            },
-                      icon: testing
-                          ? const SizedBox(
-                              width: 14, height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.wifi_tethering, size: 16),
-                      label: Text(testing ? '测试中...' : '测试连接'),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: CicadaColors.border),
-                      ),
-                    ),
-                    if (testResult != null) ...[
-                      const SizedBox(width: 12),
-                      Flexible(
-                        child: Text(
-                          testResult!,
+                  title: Text('配置 ${provider['name']}'),
+                  content: SizedBox(
+                    width: 450,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'API Base: ${provider['apiBase']}',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: testResult!.startsWith('✓') ? CicadaColors.ok : CicadaColors.alert,
+                            fontSize: 12,
+                            color: CicadaColors.textSecondary,
                           ),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
-                if ((provider['keyUrl'] as String).isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => launchUrl(Uri.parse(provider['keyUrl'])),
-                    child: Text(
-                      '获取 API Key \u2192',
-                      style: const TextStyle(color: CicadaColors.energy, fontSize: 13),
+                        const SizedBox(height: 16),
+                        if (!isOllama) ...[
+                          TextField(
+                            controller: controller,
+                            decoration: const InputDecoration(
+                              labelText: 'API Key',
+                              hintText: '输入你的 API Key',
+                            ),
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 16),
+                        ] else ...[
+                          if (_ollamaModels.isNotEmpty) ...[
+                            Text(
+                              '检测到本地模型:',
+                              style: TextStyle(
+                                color: CicadaColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children:
+                                  _ollamaModels
+                                      .map(
+                                        (m) => Chip(
+                                          label: Text(
+                                            m,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          backgroundColor:
+                                              CicadaColors.background,
+                                          side: const BorderSide(
+                                            color: CicadaColors.border,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      )
+                                      .toList(),
+                            ),
+                            const SizedBox(height: 16),
+                          ] else ...[
+                            Text(
+                              '未检测到 Ollama 本地模型，请先安装 Ollama 并下载模型。',
+                              style: TextStyle(
+                                color: CicadaColors.accent,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ],
+                        // Model selector
+                        DropdownButtonFormField<String>(
+                          initialValue: selectedModel,
+                          decoration: const InputDecoration(labelText: '默认模型'),
+                          items: [
+                            ...models.map(
+                              (m) => DropdownMenuItem(
+                                value: m['id'] as String,
+                                child: Text(m['name'] as String),
+                              ),
+                            ),
+                            if (isOllama)
+                              ..._ollamaModels
+                                  .where(
+                                    (m) => !models.any((pm) => pm['id'] == m),
+                                  )
+                                  .map(
+                                    (m) => DropdownMenuItem(
+                                      value: m,
+                                      child: Text('$m (本地)'),
+                                    ),
+                                  ),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              setDialogState(() => selectedModel = v);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // Test connection button
+                        Row(
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed:
+                                  testing
+                                      ? null
+                                      : () async {
+                                        setDialogState(() {
+                                          testing = true;
+                                          testResult = null;
+                                        });
+                                        final (
+                                          ok,
+                                          msg,
+                                        ) = await ConfigService.testConnection(
+                                          apiBase:
+                                              provider['apiBase'] as String,
+                                          apiKey: controller.text.trim(),
+                                          model: selectedModel,
+                                          provider:
+                                              provider['provider'] as String,
+                                        );
+                                        setDialogState(() {
+                                          testing = false;
+                                          testResult = '${ok ? "✓" : "✗"} $msg';
+                                        });
+                                      },
+                              icon:
+                                  testing
+                                      ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : const Icon(
+                                        Icons.wifi_tethering,
+                                        size: 16,
+                                      ),
+                              label: Text(testing ? '测试中...' : '测试连接'),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                  color: CicadaColors.border,
+                                ),
+                              ),
+                            ),
+                            if (testResult != null) ...[
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Text(
+                                  testResult!,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color:
+                                        testResult!.startsWith('✓')
+                                            ? CicadaColors.ok
+                                            : CicadaColors.alert,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if ((provider['keyUrl'] as String).isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          InkWell(
+                            onTap:
+                                () => launchUrl(Uri.parse(provider['keyUrl'])),
+                            child: Text(
+                              '获取 API Key \u2192',
+                              style: const TextStyle(
+                                color: CicadaColors.energy,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-              ],
-            ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('取消'),
+                    ),
+                    if (existing != null)
+                      TextButton(
+                        onPressed: () async {
+                          await ConfigService.removeProvider(provider['id']);
+                          if (ctx.mounted) Navigator.pop(ctx, '__removed__');
+                        },
+                        child: const Text(
+                          '删除',
+                          style: TextStyle(color: CicadaColors.alert),
+                        ),
+                      ),
+                    FilledButton(
+                      onPressed:
+                          () => Navigator.pop(
+                            ctx,
+                            '$selectedModel|||${controller.text}',
+                          ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: CicadaColors.data,
+                      ),
+                      child: const Text('保存'),
+                    ),
+                  ],
+                ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('取消'),
-            ),
-            if (existing != null)
-              TextButton(
-                onPressed: () async {
-                  await ConfigService.removeProvider(provider['id']);
-                  if (ctx.mounted) Navigator.pop(ctx, '__removed__');
-                },
-                child: const Text('删除', style: TextStyle(color: CicadaColors.alert)),
-              ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, '$selectedModel|||${controller.text}'),
-              style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
-              child: const Text('保存'),
-            ),
-          ],
-        ),
-      ),
     );
 
     if (result == null) {
@@ -263,19 +339,28 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                 children: [
                   const Text(
                     'MODEL CONFIG',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2.0),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
+                    ),
                   ),
                   const Spacer(),
                   if (_configuredIds.isNotEmpty)
                     Text(
                       '已配置 ${_configuredIds.length} 个供应商',
-                      style: const TextStyle(color: CicadaColors.ok, fontSize: 13),
+                      style: const TextStyle(
+                        color: CicadaColors.ok,
+                        fontSize: 13,
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text('配置 AI 模型提供商 — 保存后自动写入 openclaw.json',
-                  style: TextStyle(color: CicadaColors.textSecondary)),
+              Text(
+                '配置 AI 模型提供商 — 保存后自动写入 openclaw.json',
+                style: TextStyle(color: CicadaColors.textSecondary),
+              ),
               const SizedBox(height: 24),
               TabBar(
                 controller: _tabController,
@@ -339,18 +424,33 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
             children: [
               Row(
                 children: [
-                  Text('自定义供应商', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: CicadaColors.textPrimary)),
+                  Text(
+                    '自定义供应商',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: CicadaColors.textPrimary,
+                    ),
+                  ),
                   const Spacer(),
                   FilledButton.icon(
                     onPressed: () => _showAddCustomDialog(),
                     icon: const Icon(Icons.add),
                     label: const Text('添加供应商'),
-                    style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: CicadaColors.data,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text('添加任意 OpenAI 兼容 API 的供应商', style: TextStyle(color: CicadaColors.textSecondary, fontSize: 13)),
+              Text(
+                '添加任意 OpenAI 兼容 API 的供应商',
+                style: TextStyle(
+                  color: CicadaColors.textSecondary,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 16),
               if (customs.isEmpty)
                 Center(
@@ -358,11 +458,24 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                     padding: const EdgeInsets.only(top: 48),
                     child: Column(
                       children: [
-                        Icon(Icons.add_circle_outline, size: 48, color: CicadaColors.textTertiary),
+                        Icon(
+                          Icons.add_circle_outline,
+                          size: 48,
+                          color: CicadaColors.textTertiary,
+                        ),
                         const SizedBox(height: 12),
-                        Text('暂无自定义供应商', style: TextStyle(color: CicadaColors.textSecondary)),
+                        Text(
+                          '暂无自定义供应商',
+                          style: TextStyle(color: CicadaColors.textSecondary),
+                        ),
                         const SizedBox(height: 4),
-                        Text('点击上方按钮添加任意 OpenAI 兼容 API', style: TextStyle(color: CicadaColors.textTertiary, fontSize: 13)),
+                        Text(
+                          '点击上方按钮添加任意 OpenAI 兼容 API',
+                          style: TextStyle(
+                            color: CicadaColors.textTertiary,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -397,70 +510,76 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
 
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: CicadaColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: CicadaColors.border),
-        ),
-        title: const Text('添加自定义供应商'),
-        content: SizedBox(
-          width: 450,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: '供应商名称',
-                  hintText: '例: 我的代理',
-                ),
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: CicadaColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: CicadaColors.border),
+            ),
+            title: const Text('添加自定义供应商'),
+            content: SizedBox(
+              width: 450,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '供应商名称',
+                      hintText: '例: 我的代理',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: baseCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'API Base URL',
+                      hintText: 'https://api.example.com/v1',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: keyCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'API Key',
+                      hintText: 'sk-...',
+                    ),
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: modelCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '模型 ID',
+                      hintText: '例: gpt-4o, claude-sonnet-4',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '支持所有 OpenAI 兼容 API（中转站、私有部署等）',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: CicadaColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: baseCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'API Base URL',
-                  hintText: 'https://api.example.com/v1',
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('取消'),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: keyCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'API Key',
-                  hintText: 'sk-...',
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: CicadaColors.data,
                 ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: modelCtrl,
-                decoration: const InputDecoration(
-                  labelText: '模型 ID',
-                  hintText: '例: gpt-4o, claude-sonnet-4',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '支持所有 OpenAI 兼容 API（中转站、私有部署等）',
-                style: TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
+                child: const Text('添加'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: CicadaColors.data),
-            child: const Text('添加'),
-          ),
-        ],
-      ),
     );
 
     if (result != true) {
@@ -480,7 +599,8 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
     modelCtrl.dispose();
     if (name.isEmpty || base.isEmpty || model.isEmpty) return;
 
-    final id = 'custom-${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}';
+    final id =
+        'custom-${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}';
 
     // Save to customProviders list in config
     final config = await ConfigService.readConfig();
@@ -492,7 +612,7 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       'description': base,
       'apiBase': base,
       'models': [
-        {'id': model, 'name': model, 'context': 128000}
+        {'id': model, 'name': model, 'context': 128000},
       ],
       'keyUrl': '',
       'freeQuota': '',
@@ -520,7 +640,10 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: configured ? CicadaColors.ok.withValues(alpha: 0.5) : CicadaColors.border,
+          color:
+              configured
+                  ? CicadaColors.ok.withValues(alpha: 0.5)
+                  : CicadaColors.border,
         ),
       ),
       child: Padding(
@@ -533,11 +656,18 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                 Expanded(
                   child: Text(
                     provider['name'],
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 if (configured)
-                  const Icon(Icons.check_circle, color: CicadaColors.ok, size: 20),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CicadaColors.ok,
+                    size: 20,
+                  ),
               ],
             ),
             const SizedBox(height: 4),
@@ -564,9 +694,8 @@ class _ModelsPageState extends State<ModelsPage> with SingleTickerProviderStateM
                   child: FilledButton(
                     onPressed: () => _showConfigDialog(provider),
                     style: FilledButton.styleFrom(
-                      backgroundColor: configured
-                          ? CicadaColors.border
-                          : CicadaColors.data,
+                      backgroundColor:
+                          configured ? CicadaColors.border : CicadaColors.data,
                     ),
                     child: Text(configured ? '修改配置' : '配置'),
                   ),

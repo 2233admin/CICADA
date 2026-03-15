@@ -58,21 +58,23 @@ class _ScanLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final y = size.height * progress;
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.transparent,
-          const Color(0xFF55D0FF).withValues(alpha: 0.03),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(0, y - 30, size.width, 60));
+    final paint =
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              const Color(0xFF55D0FF).withValues(alpha: 0.03),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(Rect.fromLTWH(0, y - 30, size.width, 60));
 
     canvas.drawRect(Rect.fromLTWH(0, y - 30, size.width, 60), paint);
   }
 
   @override
-  bool shouldRepaint(covariant _ScanLinePainter old) => progress != old.progress;
+  bool shouldRepaint(covariant _ScanLinePainter old) =>
+      progress != old.progress;
 }

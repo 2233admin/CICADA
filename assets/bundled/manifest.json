@@ -1,0 +1,35 @@
+{
+  "nodeVersion": "22.14.0",
+  "openclawVersion": "0.1.8",
+  "platforms": [
+    {
+      "name": "win-x64",
+      "archive": "nodejs/node-v22.14.0-win-x64.zip",
+      "binPath": "node.exe",
+      "npmPath": "npm.cmd"
+    },
+    {
+      "name": "darwin-arm64",
+      "archive": "nodejs/node-v22.14.0-darwin-arm64.tar.gz",
+      "binPath": "bin/node",
+      "npmPath": "bin/npm"
+    },
+    {
+      "name": "darwin-x64",
+      "archive": "nodejs/node-v22.14.0-darwin-x64.tar.gz",
+      "binPath": "bin/node",
+      "npmPath": "bin/npm"
+    },
+    {
+      "name": "linux-x64",
+      "archive": "nodejs/node-v22.14.0-linux-x64.tar.xz",
+      "binPath": "bin/node",
+      "npmPath": "bin/npm"
+    }
+  ],
+  "openclaw": {
+    "package": "openclaw-0.1.8.tgz",
+    "version": "0.1.8"
+  },
+  "note": "Run 'dart scripts/prepare_bundled_deps.dart' to download actual binaries"
+}

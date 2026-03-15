@@ -45,21 +45,21 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
         await clipboard.write([item]);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('报告已复制到剪贴板')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('报告已复制到剪贴板')));
       } else {
         // Fallback: just show the report text
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('剪贴板不可用')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('剪贴板不可用')));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('复制失败: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('复制失败: $e')));
     }
   }
 
@@ -113,16 +113,17 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
               const Spacer(),
               FilledButton.icon(
                 onPressed: _running ? null : _runDiagnostics,
-                icon: _running
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
+                icon:
+                    _running
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.refresh, size: 18),
                 label: const Text('重新检测'),
                 style: FilledButton.styleFrom(
                   backgroundColor: CicadaColors.data,
@@ -137,9 +138,7 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
           const SizedBox(height: 8),
           const Text(
             '三层诊断: 本地检测 → 预置修复 → 报告导出',
-            style: TextStyle(
-              color: CicadaColors.textSecondary,
-            ),
+            style: TextStyle(color: CicadaColors.textSecondary),
           ),
           const SizedBox(height: 24),
 
@@ -188,8 +187,9 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
                     children: [
                       OutlinedButton.icon(
                         onPressed: () {
-                          final reportText =
-                              DiagnosticService.exportReport(_report!);
+                          final reportText = DiagnosticService.exportReport(
+                            _report!,
+                          );
                           final lines = ValueNotifier<List<String>>(
                             reportText.split('\n'),
                           );
@@ -251,15 +251,11 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
               child: SizedBox(
                 width: 48,
                 height: 48,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
             const SizedBox(height: 16),
-            const Center(
-              child: Text('正在执行三层诊断...'),
-            ),
+            const Center(child: Text('正在执行三层诊断...')),
           ],
         ],
       ),
@@ -340,31 +336,33 @@ class _DiagnosticPageState extends State<DiagnosticPage> {
                 const SizedBox(width: 8),
                 Wrap(
                   spacing: 6,
-                  children: finding.actions.map((action) {
-                    return OutlinedButton(
-                      onPressed: () => _handleAction(action),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor:
-                            CicadaColors.data.withValues(alpha: 0.05),
-                        side: BorderSide(
-                          color: _levelToColor(finding.level),
-                        ),
-                        minimumSize: Size.zero,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        action.label,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: _levelToColor(finding.level),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                  children:
+                      finding.actions.map((action) {
+                        return OutlinedButton(
+                          onPressed: () => _handleAction(action),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: CicadaColors.data.withValues(
+                              alpha: 0.05,
+                            ),
+                            side: BorderSide(
+                              color: _levelToColor(finding.level),
+                            ),
+                            minimumSize: Size.zero,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            action.label,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _levelToColor(finding.level),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                 ),
               ],
             ),

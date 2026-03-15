@@ -29,8 +29,11 @@ class _TokenPageState extends State<TokenPage> {
     try {
       final records = await TokenService.parseLogs();
       // Filter by time range
-      final cutoff = DateTime.now().subtract(Duration(days: _selectedTimeRange));
-      final filtered = records.where((r) => r.timestamp.isAfter(cutoff)).toList();
+      final cutoff = DateTime.now().subtract(
+        Duration(days: _selectedTimeRange),
+      );
+      final filtered =
+          records.where((r) => r.timestamp.isAfter(cutoff)).toList();
       final stats = TokenService.calculateStatistics(filtered);
 
       if (!mounted) return;
@@ -85,16 +88,17 @@ class _TokenPageState extends State<TokenPage> {
               const SizedBox(width: 16),
               FilledButton.icon(
                 onPressed: _loading ? null : _loadData,
-                icon: _loading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
+                icon:
+                    _loading
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.refresh, size: 18),
                 label: const Text('刷新'),
                 style: FilledButton.styleFrom(
                   backgroundColor: CicadaColors.data,
@@ -105,9 +109,7 @@ class _TokenPageState extends State<TokenPage> {
           const SizedBox(height: 8),
           const Text(
             'Token 使用分析与趋势',
-            style: TextStyle(
-              color: CicadaColors.textSecondary,
-            ),
+            style: TextStyle(color: CicadaColors.textSecondary),
           ),
           const SizedBox(height: 24),
 
@@ -122,14 +124,9 @@ class _TokenPageState extends State<TokenPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildTrendChart(),
-                ),
+                Expanded(flex: 2, child: _buildTrendChart()),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _buildModelChart(),
-                ),
+                Expanded(child: _buildModelChart()),
               ],
             ),
             const SizedBox(height: 24),
@@ -159,10 +156,7 @@ class _TokenPageState extends State<TokenPage> {
             style: const TextStyle(color: CicadaColors.alert),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _loadData,
-            child: const Text('重试'),
-          ),
+          OutlinedButton(onPressed: _loadData, child: const Text('重试')),
         ],
       ),
     );
@@ -254,11 +248,14 @@ class _TokenPageState extends State<TokenPage> {
     }
 
     // Limit to last 30 points for readability
-    final data = _stats.dailyTrend.length > 30
-        ? _stats.dailyTrend.sublist(_stats.dailyTrend.length - 30)
-        : _stats.dailyTrend;
+    final data =
+        _stats.dailyTrend.length > 30
+            ? _stats.dailyTrend.sublist(_stats.dailyTrend.length - 30)
+            : _stats.dailyTrend;
 
-    final maxY = data.map((d) => d.tokens.toDouble()).reduce((a, b) => a > b ? a : b) * 1.2;
+    final maxY =
+        data.map((d) => d.tokens.toDouble()).reduce((a, b) => a > b ? a : b) *
+        1.2;
 
     return Container(
       height: 300,
@@ -288,10 +285,7 @@ class _TokenPageState extends State<TokenPage> {
                   drawVerticalLine: false,
                   horizontalInterval: maxY / 5,
                   getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: CicadaColors.border,
-                      strokeWidth: 1,
-                    );
+                    return FlLine(color: CicadaColors.border, strokeWidth: 1);
                   },
                 ),
                 titlesData: FlTitlesData(
@@ -316,7 +310,9 @@ class _TokenPageState extends State<TokenPage> {
                       interval: (data.length / 6).ceil().toDouble(),
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
-                        if (index < 0 || index >= data.length) return const SizedBox();
+                        if (index < 0 || index >= data.length) {
+                          return const SizedBox();
+                        }
                         return Text(
                           data[index].date.substring(5), // MM-DD
                           style: const TextStyle(
@@ -337,9 +333,13 @@ class _TokenPageState extends State<TokenPage> {
                 maxY: maxY,
                 lineBarsData: [
                   LineChartBarData(
-                    spots: data.asMap().entries.map((e) {
-                      return FlSpot(e.key.toDouble(), e.value.tokens.toDouble());
-                    }).toList(),
+                    spots:
+                        data.asMap().entries.map((e) {
+                          return FlSpot(
+                            e.key.toDouble(),
+                            e.value.tokens.toDouble(),
+                          );
+                        }).toList(),
                     isCurved: true,
                     color: CicadaColors.data,
                     barWidth: 2,
@@ -368,27 +368,28 @@ class _TokenPageState extends State<TokenPage> {
     final data = _stats.modelDistribution.take(5).toList();
     final total = data.map((d) => d.tokens).reduce((a, b) => a + b);
 
-    final sections = data.asMap().entries.map((e) {
-      final colors = [
-        CicadaColors.data,
-        CicadaColors.energy,
-        CicadaColors.ok,
-        Colors.orange,
-        CicadaColors.accent,
-      ];
-      final percentage = e.value.tokens / total;
-      return PieChartSectionData(
-        value: e.value.tokens.toDouble(),
-        title: '${(percentage * 100).toStringAsFixed(1)}%',
-        color: colors[e.key % colors.length],
-        radius: 60,
-        titleStyle: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
-        ),
-      );
-    }).toList();
+    final sections =
+        data.asMap().entries.map((e) {
+          final colors = [
+            CicadaColors.data,
+            CicadaColors.energy,
+            CicadaColors.ok,
+            Colors.orange,
+            CicadaColors.accent,
+          ];
+          final percentage = e.value.tokens / total;
+          return PieChartSectionData(
+            value: e.value.tokens.toDouble(),
+            title: '${(percentage * 100).toStringAsFixed(1)}%',
+            color: colors[e.key % colors.length],
+            radius: 60,
+            titleStyle: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          );
+        }).toList();
 
     return Container(
       height: 300,
@@ -426,38 +427,39 @@ class _TokenPageState extends State<TokenPage> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: data.asMap().entries.map((e) {
-                    final colors = [
-                      CicadaColors.data,
-                      CicadaColors.energy,
-                      CicadaColors.ok,
-                      Colors.orange,
-                      CicadaColors.accent,
-                    ];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colors[e.key % colors.length],
-                              shape: BoxShape.circle,
-                            ),
+                  children:
+                      data.asMap().entries.map((e) {
+                        final colors = [
+                          CicadaColors.data,
+                          CicadaColors.energy,
+                          CicadaColors.ok,
+                          Colors.orange,
+                          CicadaColors.accent,
+                        ];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: colors[e.key % colors.length],
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _truncateModelName(e.value.model),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: CicadaColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _truncateModelName(e.value.model),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: CicadaColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -554,19 +556,27 @@ class _TokenPageState extends State<TokenPage> {
                   ],
                 ),
                 // Rows
-                ...recent.map((r) => TableRow(
-                  children: [
-                    _buildTableCell(_formatDateTime(r.timestamp)),
-                    _buildTableCell(_truncateModelName(r.model)),
-                    _buildTableCell(_formatNumber(r.inputTokens), align: TextAlign.right),
-                    _buildTableCell(_formatNumber(r.outputTokens), align: TextAlign.right),
-                    _buildTableCell(
-                      _formatNumber(r.totalTokens),
-                      align: TextAlign.right,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                )),
+                ...recent.map(
+                  (r) => TableRow(
+                    children: [
+                      _buildTableCell(_formatDateTime(r.timestamp)),
+                      _buildTableCell(_truncateModelName(r.model)),
+                      _buildTableCell(
+                        _formatNumber(r.inputTokens),
+                        align: TextAlign.right,
+                      ),
+                      _buildTableCell(
+                        _formatNumber(r.outputTokens),
+                        align: TextAlign.right,
+                      ),
+                      _buildTableCell(
+                        _formatNumber(r.totalTokens),
+                        align: TextAlign.right,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
         ],
@@ -594,10 +604,9 @@ class _TokenPageState extends State<TokenPage> {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       child: Text(
         text,
-        style: style ?? const TextStyle(
-          fontSize: 12,
-          color: CicadaColors.textSecondary,
-        ),
+        style:
+            style ??
+            const TextStyle(fontSize: 12, color: CicadaColors.textSecondary),
         textAlign: align,
       ),
     );

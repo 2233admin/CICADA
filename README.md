@@ -4,7 +4,8 @@
 
 ## 功能
 
-- **一键安装** — 环境检测 → Node.js 安装（国内镜像） → OpenClaw 安装，全程可视化
+- **一键安装** — 环境检测 → Node.js 安装 → OpenClaw 安装，全程可视化
+- **离线安装** — 内置 Node.js + OpenClaw，无需联网即可完成安装（完美支持内网环境）
 - **模型预置** — 豆包/DeepSeek/Kimi/GLM/千问/Ollama 等，填 Key 即用
 - **技能商店** — 浏览、搜索、一键安装 ClawHub 技能
 - **仪表盘** — 服务状态实时轮询、一键启停、打开 Web UI
@@ -26,9 +27,27 @@ flutter run -d windows
 
 ## 构建
 
+### 标准构建（在线安装）
+
 ```bash
 flutter build windows --release
 ```
+
+### 离线安装包构建（推荐）
+
+```bash
+# 一键构建（自动下载离线资源）
+dart scripts/build_with_bundled.dart
+
+# 或分步执行
+# 1. 准备离线资源
+dart scripts/prepare_bundled_deps.dart
+
+# 2. 构建应用
+flutter build windows --release
+```
+
+详细说明见 [OFFLINE_INSTALL.md](./OFFLINE_INSTALL.md)。
 
 ## 技术栈
 Flutter 3.29 + Dart 3.7 + Material 3

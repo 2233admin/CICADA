@@ -19,12 +19,14 @@ class BundledSkillMeta {
     required this.files,
   });
 
-  factory BundledSkillMeta.fromJson(Map<String, dynamic> json) => BundledSkillMeta(
+  factory BundledSkillMeta.fromJson(Map<String, dynamic> json) =>
+      BundledSkillMeta(
         name: json['name'] as String,
         version: json['version'] as String? ?? '0.0.0',
         description: json['description'] as String? ?? '',
         author: json['author'] as String? ?? 'unknown',
-        files: (json['files'] as List<dynamic>?)?.cast<String>() ?? ['skill.md'],
+        files:
+            (json['files'] as List<dynamic>?)?.cast<String>() ?? ['skill.md'],
       );
 }
 
@@ -38,11 +40,14 @@ class BundledSkillService {
   static Future<List<BundledSkillMeta>> loadManifest() async {
     if (_cachedManifest != null) return _cachedManifest!;
     try {
-      final str = await rootBundle.loadString('assets/bundled_skills/index.json');
+      final str = await rootBundle.loadString(
+        'assets/bundled_skills/index.json',
+      );
       final data = json.decode(str) as Map<String, dynamic>;
-      final skills = (data['skills'] as List<dynamic>)
-          .map((e) => BundledSkillMeta.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final skills =
+          (data['skills'] as List<dynamic>)
+              .map((e) => BundledSkillMeta.fromJson(e as Map<String, dynamic>))
+              .toList();
       _cachedManifest = skills;
       return skills;
     } catch (_) {
@@ -52,7 +57,10 @@ class BundledSkillService {
 
   /// Get the OpenClaw skills directory path
   static String _getSkillsDir() {
-    final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? '';
+    final home =
+        Platform.environment['USERPROFILE'] ??
+        Platform.environment['HOME'] ??
+        '';
     return '$home/.openclaw/skills';
   }
 
@@ -139,6 +147,9 @@ class BundledSkillService {
 
   static List<int> _parseVersion(String v) {
     final parts = v.split('.');
-    return List.generate(3, (i) => i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0);
+    return List.generate(
+      3,
+      (i) => i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
+    );
   }
 }

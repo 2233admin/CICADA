@@ -32,10 +32,10 @@ class BackupInfo {
   });
 
   BackupInfo.invalid()
-      : version = '',
-        backupPath = '',
-        backupTime = DateTime(1970),
-        isValid = false;
+    : version = '',
+      backupPath = '',
+      backupTime = DateTime(1970),
+      isValid = false;
 }
 
 class UpdateService {
@@ -90,7 +90,10 @@ class UpdateService {
 
   static List<int> _parseVersion(String v) {
     final parts = v.split('.');
-    return List.generate(3, (i) => i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0);
+    return List.generate(
+      3,
+      (i) => i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0,
+    );
   }
 
   /// Create backup of current application before update
@@ -105,7 +108,8 @@ class UpdateService {
       // Create backup directory
       final backupDir = await _getBackupDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final backupPath = '${backupDir.path}/backup_${_currentVersion}_$timestamp';
+      final backupPath =
+          '${backupDir.path}/backup_${_currentVersion}_$timestamp';
 
       // Create backup directory
       final backupFolder = Directory(backupPath);
@@ -118,11 +122,13 @@ class UpdateService {
 
       // Save backup metadata
       final metaFile = File('$backupPath/backup_meta.json');
-      await metaFile.writeAsString(jsonEncode({
-        'version': _currentVersion,
-        'timestamp': timestamp,
-        'platform': Platform.operatingSystem,
-      }));
+      await metaFile.writeAsString(
+        jsonEncode({
+          'version': _currentVersion,
+          'timestamp': timestamp,
+          'platform': Platform.operatingSystem,
+        }),
+      );
 
       return BackupInfo(
         version: _currentVersion,
@@ -150,7 +156,9 @@ class UpdateService {
             final info = BackupInfo(
               version: meta['version'] as String,
               backupPath: entity.path,
-              backupTime: DateTime.fromMillisecondsSinceEpoch(meta['timestamp'] as int),
+              backupTime: DateTime.fromMillisecondsSinceEpoch(
+                meta['timestamp'] as int,
+              ),
               isValid: true,
             );
             if (latest == null || info.backupTime.isAfter(latest.backupTime)) {
@@ -195,12 +203,16 @@ class UpdateService {
           final metaFile = File('${entity.path}/backup_meta.json');
           if (await metaFile.exists()) {
             final meta = jsonDecode(await metaFile.readAsString());
-            backups.add(BackupInfo(
-              version: meta['version'] as String,
-              backupPath: entity.path,
-              backupTime: DateTime.fromMillisecondsSinceEpoch(meta['timestamp'] as int),
-              isValid: true,
-            ));
+            backups.add(
+              BackupInfo(
+                version: meta['version'] as String,
+                backupPath: entity.path,
+                backupTime: DateTime.fromMillisecondsSinceEpoch(
+                  meta['timestamp'] as int,
+                ),
+                isValid: true,
+              ),
+            );
           }
         }
       }

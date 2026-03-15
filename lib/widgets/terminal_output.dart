@@ -5,11 +5,7 @@ class TerminalOutput extends StatefulWidget {
   final List<String> lines;
   final double height;
 
-  const TerminalOutput({
-    super.key,
-    required this.lines,
-    this.height = 200,
-  });
+  const TerminalOutput({super.key, required this.lines, this.height = 200});
 
   @override
   State<TerminalOutput> createState() => _TerminalOutputState();
@@ -63,9 +59,10 @@ class _TerminalOutputState extends State<TerminalOutput> {
             style: TextStyle(
               fontFamily: 'Consolas',
               fontSize: 12,
-              color: isError
-                  ? CicadaColors.alert
-                  : isDone
+              color:
+                  isError
+                      ? CicadaColors.alert
+                      : isDone
                       ? CicadaColors.ok
                       : CicadaColors.muted,
             ),
