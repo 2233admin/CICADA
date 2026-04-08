@@ -8,3 +8,11 @@ build/
 .omc/
 .DS_Store
 Thumbs.db
+.gitnexus
+
+# Bundled dependencies (downloaded during build)
+assets/bundled/nodejs/*.zip
+assets/bundled/nodejs/*.tar.gz
+assets/bundled/nodejs/*.tar.xz
+assets/bundled/*.tgz
+assets/bundled/*.tar.gz

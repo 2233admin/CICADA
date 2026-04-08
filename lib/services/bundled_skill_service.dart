@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:pub_semver/pub_semver.dart';
 
 /// Metadata for a single bundled skill
 class BundledSkillMeta {
@@ -19,12 +20,14 @@ class BundledSkillMeta {
     required this.files,
   });
 
-  factory BundledSkillMeta.fromJson(Map<String, dynamic> json) => BundledSkillMeta(
+  factory BundledSkillMeta.fromJson(Map<String, dynamic> json) =>
+      BundledSkillMeta(
         name: json['name'] as String,
         version: json['version'] as String? ?? '0.0.0',
         description: json['description'] as String? ?? '',
         author: json['author'] as String? ?? 'unknown',
-        files: (json['files'] as List<dynamic>?)?.cast<String>() ?? ['skill.md'],
+        files:
+            (json['files'] as List<dynamic>?)?.cast<String>() ?? ['skill.md'],
       );
 }
 
@@ -33,16 +36,30 @@ class BundledSkillMeta {
 /// bundled assets to the OpenClaw skills directory.
 class BundledSkillService {
   static List<BundledSkillMeta>? _cachedManifest;
+  static String? _skillsDirOverride;
+
+  /// Clear cached manifest for testing.
+  static void clearCacheForTest() {
+    _cachedManifest = null;
+  }
+
+  /// Override skills directory for testing. Pass null to reset.
+  static void overrideSkillsDirForTest(String? path) {
+    _skillsDirOverride = path;
+  }
 
   /// Load the bundled skills manifest from assets
   static Future<List<BundledSkillMeta>> loadManifest() async {
     if (_cachedManifest != null) return _cachedManifest!;
     try {
-      final str = await rootBundle.loadString('assets/bundled_skills/index.json');
+      final str = await rootBundle.loadString(
+        'assets/bundled_skills/index.json',
+      );
       final data = json.decode(str) as Map<String, dynamic>;
-      final skills = (data['skills'] as List<dynamic>)
-          .map((e) => BundledSkillMeta.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final skills =
+          (data['skills'] as List<dynamic>)
+              .map((e) => BundledSkillMeta.fromJson(e as Map<String, dynamic>))
+              .toList();
       _cachedManifest = skills;
       return skills;
     } catch (_) {
@@ -52,7 +69,11 @@ class BundledSkillService {
 
   /// Get the OpenClaw skills directory path
   static String _getSkillsDir() {
-    final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? '';
+    if (_skillsDirOverride != null) return _skillsDirOverride!;
+    final home =
+        Platform.environment['USERPROFILE'] ??
+        Platform.environment['HOME'] ??
+        '';
     return '$home/.openclaw/skills';
   }
 
@@ -128,17 +149,12 @@ class BundledSkillService {
   }
 
   static bool _isNewer(String remote, String current) {
-    final r = _parseVersion(remote);
-    final c = _parseVersion(current);
-    for (int i = 0; i < 3; i++) {
-      if (r[i] > c[i]) return true;
-      if (r[i] < c[i]) return false;
+    try {
+      final remoteVer = Version.parse(remote);
+      final currentVer = Version.parse(current);
+      return remoteVer > currentVer;
+    } catch (_) {
+      return false;
     }
-    return false;
-  }
-
-  static List<int> _parseVersion(String v) {
-    final parts = v.split('.');
-    return List.generate(3, (i) => i < parts.length ? (int.tryParse(parts[i]) ?? 0) : 0);
   }
 }
