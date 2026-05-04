@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../models/mesh_backend.dart';
+
 class ConfigService {
   static String get _homePath =>
       Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? '';
@@ -29,6 +31,43 @@ class ConfigService {
     final file = File(configPath);
     final encoder = const JsonEncoder.withIndent('  ');
     await file.writeAsString(encoder.convert(config));
+  }
+
+  static Future<MeshBackendId> getPreferredMeshBackend() async {
+    final config = await readConfig();
+    final mesh = config['meshNetworking'] as Map<String, dynamic>?;
+    return MeshBackendIdX.fromConfigValue(mesh?['preferredBackend'] as String?) ??
+        MeshBackendId.netbird;
+  }
+
+  static Future<List<MeshBackendId>> getEnabledMeshBackends() async {
+    final config = await readConfig();
+    final mesh = config['meshNetworking'] as Map<String, dynamic>?;
+    final raw = mesh?['enabledBackends'] as List<dynamic>?;
+    if (raw == null || raw.isEmpty) {
+      return [MeshBackendId.netbird, MeshBackendId.tailscale];
+    }
+
+    final mapped = raw
+        .map((value) => MeshBackendIdX.fromConfigValue(value as String?))
+        .whereType<MeshBackendId>()
+        .toList();
+    return mapped.isEmpty
+        ? [MeshBackendId.netbird, MeshBackendId.tailscale]
+        : mapped;
+  }
+
+  static Future<void> saveMeshNetworking({
+    required MeshBackendId preferredBackend,
+    required List<MeshBackendId> enabledBackends,
+  }) async {
+    final config = await readConfig();
+    config['meshNetworking'] = {
+      'preferredBackend': preferredBackend.configValue,
+      'enabledBackends':
+          enabledBackends.map((backend) => backend.configValue).toList(),
+    };
+    await writeConfig(config);
   }
 
   /// Add or update a provider in openclaw.json

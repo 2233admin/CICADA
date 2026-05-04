@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/mesh_backend.dart';
+import '../services/desktop_launcher_service.dart';
 import '../services/installer_service.dart';
 import '../services/config_service.dart';
+import '../services/mesh_network_service.dart';
 import '../widgets/terminal_output.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -21,14 +24,30 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _serviceRunning = false;
   bool _actionLoading = false;
   Set<String> _configuredProviders = {};
+  MeshNetworkingState? _meshState;
   Timer? _pollTimer;
   final List<String> _serviceLog = [];
+
+  Future<void> _runDesktopAction(
+    Future<void> Function() action,
+    String failureMessage,
+  ) async {
+    try {
+      await action();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$failureMessage: $e')),
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _detectEnvironment();
     _loadConfiguredProviders();
+    _loadMeshState();
     _checkServiceStatus();
     // Poll service status every 5 seconds
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _checkServiceStatus());
@@ -58,6 +77,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final configured = await ConfigService.getConfiguredProviders();
     if (!mounted) return;
     setState(() => _configuredProviders = configured);
+  }
+
+  Future<void> _loadMeshState() async {
+    final state = await MeshNetworkService.loadState();
+    if (!mounted) return;
+    setState(() => _meshState = state);
   }
 
   Future<void> _checkServiceStatus() async {
@@ -138,6 +163,8 @@ class _DashboardPageState extends State<DashboardPage> {
               Expanded(child: _buildQuickActionsCard()),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildMeshCard(),
           if (_serviceLog.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Text('服务日志', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -357,11 +384,10 @@ class _DashboardPageState extends State<DashboardPage> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  if (Platform.isWindows) {
-                    Process.run('cmd', ['/c', 'start', 'cmd']);
-                  }
-                },
+                onPressed: () => _runDesktopAction(
+                  DesktopLauncherService.openTerminal,
+                  '打开终端失败',
+                ),
                 icon: const Icon(Icons.terminal),
                 label: const Text('打开终端'),
                 style: OutlinedButton.styleFrom(
@@ -373,12 +399,12 @@ class _DashboardPageState extends State<DashboardPage> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  final dir = ConfigService.configDir;
-                  if (Platform.isWindows) {
-                    Process.run('explorer', [dir.replaceAll('/', '\\')]);
-                  }
-                },
+                onPressed: () => _runDesktopAction(
+                  () => DesktopLauncherService.openDirectory(
+                    ConfigService.configDir,
+                  ),
+                  '打开配置目录失败',
+                ),
                 icon: const Icon(Icons.folder_open),
                 label: const Text('打开配置目录'),
                 style: OutlinedButton.styleFrom(
@@ -389,6 +415,84 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMeshCard() {
+    final state = _meshState;
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFF30363D)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.hub_outlined, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  '组网方案',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (state == null)
+              const Text('正在检测 NetBird / Tailscale ...')
+            else ...[
+              _meshSummaryRow('主方案', state.preferredBackend.label),
+              const SizedBox(height: 8),
+              _meshSummaryRow(
+                '兼容方案',
+                state.enabledBackends
+                    .where((backend) => backend != state.preferredBackend)
+                    .map((backend) => backend.label)
+                    .join(' / '),
+              ),
+              const SizedBox(height: 12),
+              ...state.statuses.map(
+                (status) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        status.installed ? Icons.check_circle : Icons.remove_circle_outline,
+                        size: 18,
+                        color: status.installed ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      Text('${status.backend.label}: '),
+                      Expanded(
+                        child: Text(
+                          status.installed ? status.version : '未安装',
+                          style: TextStyle(color: Colors.grey[400]),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _meshSummaryRow(String label, String value) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 64,
+          child: Text(label, style: TextStyle(color: Colors.grey[400])),
+        ),
+        Expanded(child: Text(value.isEmpty ? '-' : value)),
+      ],
     );
   }
 }

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../models/mesh_backend.dart';
 import '../services/installer_service.dart';
+import '../services/mesh_network_service.dart';
 import '../widgets/terminal_output.dart';
 
 class SetupPage extends StatefulWidget {
@@ -14,6 +16,8 @@ class SetupPage extends StatefulWidget {
 }
 
 class _SetupPageState extends State<SetupPage> {
+  static const int _lastStepIndex = 5;
+
   int _currentStep = 0;
   bool _nodeInstalled = false;
   bool _openclawInstalled = false;
@@ -24,6 +28,20 @@ class _SetupPageState extends State<SetupPage> {
   final List<String> _logLines = [];
   String _nodeVersion = '';
   String _clawVersion = '';
+  MeshBackendId _preferredMeshBackend = MeshBackendId.netbird;
+  List<MeshBackendId> _enabledMeshBackends = [
+    MeshBackendId.netbird,
+    MeshBackendId.tailscale,
+  ];
+  Map<MeshBackendId, MeshBackendStatus> _meshStatuses = {
+    for (final backend in MeshBackendId.values)
+      backend: MeshBackendStatus(
+        backend: backend,
+        installed: false,
+        version: '',
+        detail: '未检测',
+      ),
+  };
 
   @override
   void initState() {
@@ -35,14 +53,67 @@ class _SetupPageState extends State<SetupPage> {
     setState(() => _detecting = true);
     final nodeResult = await InstallerService.checkNode();
     final clawResult = await InstallerService.checkOpenClaw();
+    final meshState = await MeshNetworkService.loadState();
     if (!mounted) return;
     setState(() {
       _nodeInstalled = nodeResult.exitCode == 0;
       _openclawInstalled = clawResult.exitCode == 0;
       _nodeVersion = _nodeInstalled ? (nodeResult.stdout as String).trim() : '';
       _clawVersion = _openclawInstalled ? (clawResult.stdout as String).trim() : '';
+      _preferredMeshBackend = meshState.preferredBackend;
+      _enabledMeshBackends = meshState.enabledBackends;
+      _meshStatuses = {
+        for (final status in meshState.statuses) status.backend: status,
+      };
       _detecting = false;
     });
+  }
+
+  bool get _meshReady {
+    return _enabledMeshBackends.every(
+      (backend) => (_meshStatuses[backend]?.installed ?? false),
+    );
+  }
+
+  bool get _setupReady => _nodeInstalled && _openclawInstalled && _meshReady;
+
+  Future<void> _saveMeshSelection() async {
+    await MeshNetworkService.saveState(
+      preferredBackend: _preferredMeshBackend,
+      enabledBackends: _enabledMeshBackends,
+    );
+  }
+
+  Future<void> _selectPreferredMeshBackend(MeshBackendId backend) async {
+    setState(() {
+      _preferredMeshBackend = backend;
+      if (!_enabledMeshBackends.contains(backend)) {
+        _enabledBackendsWith(backend);
+      }
+    });
+    await _saveMeshSelection();
+  }
+
+  void _enabledBackendsWith(MeshBackendId backend) {
+    _enabledMeshBackends = [
+      ..._enabledMeshBackends.where((item) => item != backend),
+      backend,
+    ];
+  }
+
+  Future<void> _toggleMeshBackend(MeshBackendId backend, bool enabled) async {
+    if (!enabled && backend == _preferredMeshBackend) {
+      return;
+    }
+    setState(() {
+      if (enabled) {
+        _enabledBackendsWith(backend);
+      } else {
+        _enabledMeshBackends =
+            _enabledMeshBackends.where((item) => item != backend).toList();
+      }
+    });
+    await _saveMeshSelection();
   }
 
   Future<void> _runInstall(Future<Process> Function() starter, String name) async {
@@ -67,7 +138,7 @@ class _SetupPageState extends State<SetupPage> {
         });
         await _detect();
         // Auto-advance to next step
-        if (mounted && _currentStep < 4) {
+        if (mounted && _currentStep < _lastStepIndex) {
           setState(() => _currentStep++);
         }
       } else {
@@ -100,7 +171,7 @@ class _SetupPageState extends State<SetupPage> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              if (_nodeInstalled && _openclawInstalled)
+              if (_setupReady)
                 Chip(
                   label: const Text('环境就绪'),
                   avatar: const Icon(Icons.check_circle, size: 16, color: Colors.green),
@@ -111,14 +182,14 @@ class _SetupPageState extends State<SetupPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '跟随向导完成 OpenClaw 安装，整个过程约 5 分钟',
+            '跟随向导完成 OpenClaw 与组网组件安装，整个过程约 5 分钟',
             style: TextStyle(color: Colors.grey[500]),
           ),
           const SizedBox(height: 24),
           Stepper(
             currentStep: _currentStep,
             onStepContinue: () {
-              if (_currentStep < 4) setState(() => _currentStep++);
+              if (_currentStep < _lastStepIndex) setState(() => _currentStep++);
             },
             onStepCancel: () {
               if (_currentStep > 0) setState(() => _currentStep--);
@@ -128,7 +199,7 @@ class _SetupPageState extends State<SetupPage> {
                 padding: const EdgeInsets.only(top: 16),
                 child: Row(
                   children: [
-                    if (details.currentStep < 4)
+                    if (details.currentStep < _lastStepIndex)
                       FilledButton(
                         onPressed: details.onStepContinue,
                         style: FilledButton.styleFrom(
@@ -136,7 +207,7 @@ class _SetupPageState extends State<SetupPage> {
                         ),
                         child: const Text('下一步'),
                       ),
-                    if (details.currentStep == 4 && _nodeInstalled && _openclawInstalled)
+                    if (details.currentStep == _lastStepIndex && _setupReady)
                       FilledButton.icon(
                         onPressed: widget.onSetupComplete,
                         icon: const Icon(Icons.arrow_forward),
@@ -170,20 +241,26 @@ class _SetupPageState extends State<SetupPage> {
                 content: _buildNetworkStep(),
               ),
               Step(
-                title: const Text('安装 Node.js'),
+                title: const Text('组网方案'),
                 isActive: _currentStep >= 2,
+                state: _meshReady ? StepState.complete : StepState.indexed,
+                content: _buildMeshStep(),
+              ),
+              Step(
+                title: const Text('安装 Node.js'),
+                isActive: _currentStep >= 3,
                 state: _nodeInstalled ? StepState.complete : StepState.indexed,
                 content: _buildInstallNodeStep(),
               ),
               Step(
                 title: const Text('安装 OpenClaw'),
-                isActive: _currentStep >= 3,
+                isActive: _currentStep >= 4,
                 state: _openclawInstalled ? StepState.complete : StepState.indexed,
                 content: _buildInstallClawStep(),
               ),
               Step(
                 title: const Text('完成'),
-                isActive: _currentStep >= 4,
+                isActive: _currentStep >= 5,
                 content: _buildCompleteStep(),
               ),
             ],
@@ -344,6 +421,181 @@ class _SetupPageState extends State<SetupPage> {
     );
   }
 
+  Widget _buildMeshStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '默认主方案为 ${_preferredMeshBackend.label}，建议至少安装一个组网后端。',
+          style: TextStyle(color: Colors.grey[400]),
+        ),
+        const SizedBox(height: 16),
+        ...MeshBackendId.values.map(_buildMeshBackendTile),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _detecting ? null : _detect,
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('重新检测组网环境'),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF30363D)),
+          ),
+        ),
+        if (_logLines.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          TerminalOutput(lines: _logLines),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMeshBackendTile(MeshBackendId backend) {
+    final status = _meshStatuses[backend] ??
+        MeshBackendStatus(
+          backend: backend,
+          installed: false,
+          version: '',
+          detail: '未检测',
+        );
+    final enabled = _enabledMeshBackends.contains(backend);
+    final preferred = _preferredMeshBackend == backend;
+    final isInstallingThisBackend =
+        _installing && _logLines.any((line) => line.contains(backend.label));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: preferred ? const Color(0xFF7C3AED) : const Color(0xFF30363D),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: enabled,
+                onChanged: preferred
+                    ? null
+                    : (value) => _toggleMeshBackend(backend, value ?? false),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          backend.label,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Chip(
+                          label: Text(status.installed ? '已安装' : '未安装'),
+                          avatar: Icon(
+                            status.installed ? Icons.check_circle : Icons.cancel,
+                            size: 16,
+                            color: status.installed ? Colors.green : Colors.red,
+                          ),
+                          backgroundColor: (status.installed ? Colors.green : Colors.red)
+                              .withValues(alpha: 0.12),
+                          side: BorderSide.none,
+                        ),
+                        if (preferred) ...[
+                          const SizedBox(width: 8),
+                          Chip(
+                            label: const Text('主方案'),
+                            backgroundColor:
+                                const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                            side: BorderSide.none,
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      backend.description,
+                      style: TextStyle(color: Colors.grey[400]),
+                    ),
+                    if (status.version.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        status.version,
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      status.detail,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton.icon(
+                onPressed: !enabled || status.installed || _installing
+                    ? null
+                    : () => _runInstall(
+                          () => InstallerService.installMeshBackend(backend),
+                          backend.label,
+                        ),
+                icon: isInstallingThisBackend
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.download),
+                label: Text(
+                  status.installed ? '${backend.label} 已安装' : '安装 ${backend.label}',
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: preferred ? null : () => _selectPreferredMeshBackend(backend),
+                icon: const Icon(Icons.flag, size: 16),
+                label: const Text('设为主方案'),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF30363D)),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF30363D)),
+                ),
+                child: Text(
+                  backend.docsUrl,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInstallClawStep() {
     if (_openclawInstalled) {
       return Row(
@@ -407,7 +659,7 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   Widget _buildCompleteStep() {
-    final allDone = _nodeInstalled && _openclawInstalled;
+    final allDone = _setupReady;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -423,6 +675,8 @@ class _SetupPageState extends State<SetupPage> {
         ),
         if (allDone) ...[
           const SizedBox(height: 8),
+          Text('当前主组网方案：${_preferredMeshBackend.label}'),
+          const SizedBox(height: 4),
           const Text('接下来请前往「模型配置」页面，配置至少一个 AI 模型提供商。'),
           const SizedBox(height: 4),
           Text(

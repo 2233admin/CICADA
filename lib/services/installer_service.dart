@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../models/mesh_backend.dart';
+
 class InstallerService {
   static Future<ProcessResult> checkNode() async {
     try {
@@ -21,6 +23,18 @@ class InstallerService {
   static Future<ProcessResult> checkOllama() async {
     try {
       return await Process.run('ollama', ['--version'], runInShell: true);
+    } catch (e) {
+      return ProcessResult(0, 1, '', e.toString());
+    }
+  }
+
+  static Future<ProcessResult> checkMeshBackend(MeshBackendId backend) async {
+    try {
+      return await Process.run(
+        backend.detectCommand,
+        backend.detectArgs,
+        runInShell: true,
+      );
     } catch (e) {
       return ProcessResult(0, 1, '', e.toString());
     }
@@ -52,6 +66,47 @@ class InstallerService {
       args.addAll(['--registry', mirrorUrl]);
     }
     return Process.start('npm', args, runInShell: true);
+  }
+
+  static Future<Process> installMeshBackend(MeshBackendId backend) async {
+    if (Platform.isWindows) {
+      final packageId = switch (backend) {
+        MeshBackendId.netbird => 'NetBird.NetBird',
+        MeshBackendId.tailscale => 'Tailscale.Tailscale',
+      };
+      return Process.start(
+        'winget',
+        [
+          'install',
+          '--id',
+          packageId,
+          '-e',
+          '--accept-source-agreements',
+          '--accept-package-agreements',
+        ],
+        runInShell: true,
+      );
+    }
+
+    if (Platform.isLinux) {
+      final command = switch (backend) {
+        MeshBackendId.netbird =>
+          'curl -fsSL https://pkgs.netbird.io/install.sh | sudo bash',
+        MeshBackendId.tailscale =>
+          'curl -fsSL https://tailscale.com/install.sh | sh',
+      };
+      return Process.start('bash', ['-c', command], runInShell: true);
+    }
+
+    if (Platform.isMacOS) {
+      final packageName = switch (backend) {
+        MeshBackendId.netbird => 'netbirdio/tap/netbird',
+        MeshBackendId.tailscale => 'tailscale',
+      };
+      return Process.start('brew', ['install', packageName], runInShell: true);
+    }
+
+    throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
   }
 
   static Future<ProcessResult> startService() async {

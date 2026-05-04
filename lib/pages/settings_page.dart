@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/mesh_backend.dart';
 import '../services/config_service.dart';
+import '../services/desktop_launcher_service.dart';
+import '../services/mesh_network_service.dart';
 import '../services/update_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -17,6 +20,10 @@ class _SettingsPageState extends State<SettingsPage> {
   String _selectedMirror = 'https://registry.npmmirror.com';
   bool _checkingUpdate = false;
   UpdateInfo? _updateInfo;
+  bool _meshLoading = true;
+  MeshBackendId _preferredMeshBackend = MeshBackendId.netbird;
+  List<MeshBackendId> _enabledMeshBackends = [];
+  List<MeshBackendStatus> _meshStatuses = const [];
 
   @override
   void initState() {
@@ -32,6 +39,63 @@ class _SettingsPageState extends State<SettingsPage> {
       _configPath = '$home/.openclaw/openclaw.json';
       _selectedMirror = config['npmMirror'] as String? ?? 'https://registry.npmmirror.com';
     });
+    await _loadMeshNetworking();
+  }
+
+  Future<void> _loadMeshNetworking() async {
+    setState(() => _meshLoading = true);
+    final state = await MeshNetworkService.loadState();
+    if (!mounted) return;
+    setState(() {
+      _preferredMeshBackend = state.preferredBackend;
+      _enabledMeshBackends = state.enabledBackends;
+      _meshStatuses = state.statuses;
+      _meshLoading = false;
+    });
+  }
+
+  Future<void> _saveMeshNetworking() async {
+    await MeshNetworkService.saveState(
+      preferredBackend: _preferredMeshBackend,
+      enabledBackends: _enabledMeshBackends,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('组网方案设置已保存')),
+    );
+  }
+
+  Future<void> _setPreferredMeshBackend(MeshBackendId backend) async {
+    setState(() {
+      _preferredMeshBackend = backend;
+      if (!_enabledMeshBackends.contains(backend)) {
+        _enabledMeshBackends = [..._enabledMeshBackends, backend];
+      }
+    });
+    await _saveMeshNetworking();
+  }
+
+  Future<void> _toggleBackend(MeshBackendId backend, bool enabled) async {
+    final nextEnabled = [..._enabledMeshBackends];
+    if (enabled) {
+      if (!nextEnabled.contains(backend)) {
+        nextEnabled.add(backend);
+      }
+    } else {
+      if (nextEnabled.length == 1 && nextEnabled.contains(backend)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('至少保留一个组网方案')),
+        );
+        return;
+      }
+      nextEnabled.remove(backend);
+      if (_preferredMeshBackend == backend) {
+        _preferredMeshBackend = nextEnabled.first;
+      }
+    }
+
+    setState(() => _enabledMeshBackends = nextEnabled);
+    await _saveMeshNetworking();
   }
 
   Future<void> _saveMirror(String url) async {
@@ -128,10 +192,15 @@ class _SettingsPageState extends State<SettingsPage> {
               _configPath,
               trailing: IconButton(
                 icon: const Icon(Icons.folder_open, size: 18),
-                onPressed: () {
+                onPressed: () async {
                   final dir = File(_configPath).parent.path;
-                  if (Platform.isWindows) {
-                    Process.run('explorer', [dir.replaceAll('/', '\\')]);
+                  try {
+                    await DesktopLauncherService.openDirectory(dir);
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('打开目录失败: $e')),
+                    );
                   }
                 },
                 tooltip: '打开目录',
@@ -159,6 +228,41 @@ class _SettingsPageState extends State<SettingsPage> {
                 ).toList(),
               ),
             ),
+          ]),
+          const SizedBox(height: 24),
+          _buildSection('组网方案', [
+            if (_meshLoading)
+              const ListTile(
+                title: Text('正在检测 NetBird / Tailscale ...'),
+                trailing: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Text(
+                  '默认主方案使用 NetBird，兼容支持 Tailscale。',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
+              ),
+              ...MeshBackendId.values.map(_buildMeshBackendTile),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _loadMeshNetworking,
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('重新检测'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ]),
           const SizedBox(height: 24),
           _buildSection('关于', [
@@ -290,6 +394,75 @@ class _SettingsPageState extends State<SettingsPage> {
       title: Text(label),
       subtitle: Text(value, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
       trailing: trailing,
+    );
+  }
+
+  Widget _buildMeshBackendTile(MeshBackendId backend) {
+    final status = _meshStatuses.firstWhere(
+      (item) => item.backend == backend,
+      orElse: () => MeshBackendStatus(
+        backend: backend,
+        installed: false,
+        version: '',
+        detail: '未检测',
+      ),
+    );
+    final enabled = _enabledMeshBackends.contains(backend);
+    final preferred = _preferredMeshBackend == backend;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: preferred ? const Color(0xFF7C3AED) : const Color(0xFF30363D),
+        ),
+      ),
+      child: Column(
+        children: [
+          CheckboxListTile(
+            value: enabled,
+            onChanged: (value) => _toggleBackend(backend, value ?? false),
+            title: Row(
+              children: [
+                Text(backend.label),
+                const SizedBox(width: 8),
+                if (preferred)
+                  const Chip(
+                    label: Text('主方案', style: TextStyle(fontSize: 11)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ],
+            ),
+            subtitle: Text(
+              '${backend.description}\n${status.installed ? status.version : status.detail}',
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            ),
+            secondary: Icon(
+              status.installed ? Icons.check_circle : Icons.download_for_offline_outlined,
+              color: status.installed ? Colors.green : Colors.orange,
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                FilledButton.tonal(
+                  onPressed: enabled ? () => _setPreferredMeshBackend(backend) : null,
+                  child: const Text('设为主方案'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => launchUrl(Uri.parse(backend.docsUrl)),
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: const Text('查看项目'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
