@@ -37,17 +37,22 @@ class HudPanel extends StatelessWidget {
           color: CicadaColors.surface.withValues(alpha: 0.88),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: title != null
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _HudTitle(title: title!, icon: titleIcon, accent: accentColor),
-                  const SizedBox(height: 16),
-                  child,
-                ],
-              )
-            : child,
+        child:
+            title != null
+                ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HudTitle(
+                      title: title!,
+                      icon: titleIcon,
+                      accent: accentColor,
+                    ),
+                    const SizedBox(height: 16),
+                    child,
+                  ],
+                )
+                : child,
       ),
     );
   }
@@ -97,9 +102,10 @@ class _HudBorderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Optional dot grid background
     if (showGrid) {
-      final dotPaint = Paint()
-        ..color = CicadaColors.textPrimary.withValues(alpha: 0.05)
-        ..style = PaintingStyle.fill;
+      final dotPaint =
+          Paint()
+            ..color = CicadaColors.textPrimary.withValues(alpha: 0.05)
+            ..style = PaintingStyle.fill;
       const spacing = 16.0;
       const dotRadius = 0.5;
       for (double x = spacing; x < size.width; x += spacing) {
@@ -109,10 +115,11 @@ class _HudBorderPainter extends CustomPainter {
       }
     }
 
-    final paint = Paint()
-      ..color = accent.withValues(alpha: 0.4)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = accent.withValues(alpha: 0.4)
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke;
 
     final cs = cornerSize;
 
@@ -129,11 +136,21 @@ class _HudBorderPainter extends CustomPainter {
     canvas.drawLine(Offset(0, size.height), Offset(cs, size.height), paint);
 
     // Bottom-right corner bracket
-    canvas.drawLine(Offset(size.width, size.height - cs), Offset(size.width, size.height), paint);
-    canvas.drawLine(Offset(size.width - cs, size.height), Offset(size.width, size.height), paint);
+    canvas.drawLine(
+      Offset(size.width, size.height - cs),
+      Offset(size.width, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(size.width - cs, size.height),
+      Offset(size.width, size.height),
+      paint,
+    );
   }
 
   @override
   bool shouldRepaint(covariant _HudBorderPainter old) =>
-      accent != old.accent || cornerSize != old.cornerSize || showGrid != old.showGrid;
+      accent != old.accent ||
+      cornerSize != old.cornerSize ||
+      showGrid != old.showGrid;
 }

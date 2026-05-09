@@ -120,20 +120,19 @@ class ConfigService {
           'model': model,
           'max_tokens': 5,
           'messages': [
-            {'role': 'user', 'content': 'hi'}
+            {'role': 'user', 'content': 'hi'},
           ],
         });
       } else if (provider == 'google') {
-        effectiveUrl =
-            '$apiBase/models/$model:generateContent?key=$apiKey';
+        effectiveUrl = '$apiBase/models/$model:generateContent?key=$apiKey';
         headers = {'Content-Type': 'application/json'};
         body = json.encode({
           'contents': [
             {
               'parts': [
-                {'text': 'hi'}
-              ]
-            }
+                {'text': 'hi'},
+              ],
+            },
           ],
           'generationConfig': {'maxOutputTokens': 5},
         });
@@ -155,7 +154,7 @@ class ConfigService {
         body = json.encode({
           'model': model,
           'messages': [
-            {'role': 'user', 'content': 'hi'}
+            {'role': 'user', 'content': 'hi'},
           ],
           'max_tokens': 5,
         });
@@ -206,9 +205,7 @@ class ConfigService {
     // Fallback: HTTP API
     try {
       final uri = Uri.parse('http://localhost:11434/api/tags');
-      final response = await http
-          .get(uri)
-          .timeout(const Duration(seconds: 5));
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final modelList = data['models'] as List<dynamic>? ?? [];

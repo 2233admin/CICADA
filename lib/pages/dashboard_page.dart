@@ -27,7 +27,6 @@ class _DashboardPageState extends State<DashboardPage>
   Set<String> _configuredProviders = {};
   Timer? _pollTimer;
   Timer? _clockTimer;
-  Timer? _uptimeTimer;
   final List<String> _serviceLog = [];
 
   // Uptime tracking
@@ -48,7 +47,10 @@ class _DashboardPageState extends State<DashboardPage>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..repeat(reverse: true);
-    _cursorOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(_cursorController);
+    _cursorOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_cursorController);
 
     _updateClock();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -61,7 +63,10 @@ class _DashboardPageState extends State<DashboardPage>
     _detectEnvironment();
     _loadConfiguredProviders();
     _checkServiceStatus();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _checkServiceStatus());
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _checkServiceStatus(),
+    );
   }
 
   void _updateClock() {
@@ -84,7 +89,6 @@ class _DashboardPageState extends State<DashboardPage>
   void dispose() {
     _pollTimer?.cancel();
     _clockTimer?.cancel();
-    _uptimeTimer?.cancel();
     _cursorController.dispose();
     super.dispose();
   }
@@ -94,12 +98,14 @@ class _DashboardPageState extends State<DashboardPage>
     final clawResult = await InstallerService.checkOpenClaw();
     if (!mounted) return;
     setState(() {
-      _nodeVersion = nodeResult.exitCode == 0
-          ? (nodeResult.stdout as String).trim()
-          : '未安装';
-      _openclawVersion = clawResult.exitCode == 0
-          ? (clawResult.stdout as String).trim()
-          : '未安装';
+      _nodeVersion =
+          nodeResult.exitCode == 0
+              ? nodeResult.stdout.toString().trim()
+              : '未安装';
+      _openclawVersion =
+          clawResult.exitCode == 0
+              ? clawResult.stdout.toString().trim()
+              : '未安装';
     });
   }
 
@@ -143,13 +149,15 @@ class _DashboardPageState extends State<DashboardPage>
       }
 
       if (!mounted) return;
-      final stdout = (result.stdout as String).trim();
-      final stderr = (result.stderr as String).trim();
+      final stdout = result.stdout.toString().trim();
+      final stderr = result.stderr.toString().trim();
       if (stdout.isNotEmpty) setState(() => _serviceLog.add(stdout));
       if (stderr.isNotEmpty) setState(() => _serviceLog.add(stderr));
 
       if (result.exitCode == 0) {
-        setState(() => _serviceLog.add(_serviceRunning ? '✓ 服务已停止' : '✓ 服务已启动'));
+        setState(
+          () => _serviceLog.add(_serviceRunning ? '✓ 服务已停止' : '✓ 服务已启动'),
+        );
         await Future.delayed(const Duration(seconds: 2));
         await _checkServiceStatus();
       } else {
@@ -189,17 +197,18 @@ class _DashboardPageState extends State<DashboardPage>
                   const SizedBox(width: 2),
                   AnimatedBuilder(
                     animation: _cursorOpacity,
-                    builder: (context, _) => Opacity(
-                      opacity: _cursorOpacity.value,
-                      child: const Text(
-                        '_',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: CicadaColors.accent,
+                    builder:
+                        (context, _) => Opacity(
+                          opacity: _cursorOpacity.value,
+                          child: const Text(
+                            '_',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: CicadaColors.accent,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -208,7 +217,8 @@ class _DashboardPageState extends State<DashboardPage>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
+                    color:
+                        _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
                     width: 0.5,
                   ),
                   borderRadius: BorderRadius.circular(4),
@@ -219,7 +229,8 @@ class _DashboardPageState extends State<DashboardPage>
                     fontSize: 10,
                     letterSpacing: 1.5,
                     fontWeight: FontWeight.w600,
-                    color: _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
+                    color:
+                        _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
                   ),
                 ),
               ),
@@ -231,7 +242,8 @@ class _DashboardPageState extends State<DashboardPage>
             child: HudPanel(
               title: 'SERVICE CONTROL',
               titleIcon: Icons.cloud,
-              accent: _serviceRunning ? CicadaColors.energy : CicadaColors.alert,
+              accent:
+                  _serviceRunning ? CicadaColors.energy : CicadaColors.alert,
               showGrid: true,
               child: Column(
                 children: [
@@ -249,9 +261,10 @@ class _DashboardPageState extends State<DashboardPage>
                               height: 34,
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: _serviceRunning
-                                      ? CicadaColors.ok
-                                      : CicadaColors.alert,
+                                  color:
+                                      _serviceRunning
+                                          ? CicadaColors.ok
+                                          : CicadaColors.alert,
                                   width: 2,
                                 ),
                                 color: (_serviceRunning
@@ -266,9 +279,10 @@ class _DashboardPageState extends State<DashboardPage>
                                     _serviceRunning
                                         ? Icons.power
                                         : Icons.power_off,
-                                    color: _serviceRunning
-                                        ? CicadaColors.ok
-                                        : CicadaColors.alert,
+                                    color:
+                                        _serviceRunning
+                                            ? CicadaColors.ok
+                                            : CicadaColors.alert,
                                     size: 18,
                                   ),
                                 ),
@@ -287,17 +301,19 @@ class _DashboardPageState extends State<DashboardPage>
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: _serviceRunning
-                                    ? CicadaColors.ok
-                                    : CicadaColors.alert,
+                                color:
+                                    _serviceRunning
+                                        ? CicadaColors.ok
+                                        : CicadaColors.alert,
                               ),
                             ),
                             if (_serviceRunning) ...[
                               Text(
                                 'http://127.0.0.1:18789',
                                 style: TextStyle(
-                                    fontSize: 12,
-                                    color: CicadaColors.textTertiary),
+                                  fontSize: 12,
+                                  color: CicadaColors.textTertiary,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -318,31 +334,35 @@ class _DashboardPageState extends State<DashboardPage>
                         width: 140,
                         child: OutlinedButton.icon(
                           onPressed: _actionLoading ? null : _toggleService,
-                          icon: _actionLoading
-                              ? SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: _serviceRunning
-                                        ? CicadaColors.alert
-                                        : CicadaColors.ok,
+                          icon:
+                              _actionLoading
+                                  ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color:
+                                          _serviceRunning
+                                              ? CicadaColors.alert
+                                              : CicadaColors.ok,
+                                    ),
+                                  )
+                                  : Icon(
+                                    _serviceRunning
+                                        ? Icons.stop
+                                        : Icons.play_arrow,
                                   ),
-                                )
-                              : Icon(
-                                  _serviceRunning
-                                      ? Icons.stop
-                                      : Icons.play_arrow,
-                                ),
                           label: Text(_serviceRunning ? '停止' : '启动'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: _serviceRunning
-                                ? CicadaColors.alert
-                                : CicadaColors.ok,
+                            foregroundColor:
+                                _serviceRunning
+                                    ? CicadaColors.alert
+                                    : CicadaColors.ok,
                             side: BorderSide(
-                              color: _serviceRunning
-                                  ? CicadaColors.alert
-                                  : CicadaColors.ok,
+                              color:
+                                  _serviceRunning
+                                      ? CicadaColors.alert
+                                      : CicadaColors.ok,
                               width: 1,
                             ),
                           ),
@@ -383,32 +403,47 @@ class _DashboardPageState extends State<DashboardPage>
                   title: 'MODELS',
                   titleIcon: Icons.smart_toy,
                   accent: CicadaColors.data,
-                  child: _configuredProviders.isEmpty
-                      ? Text('暂未配置任何模型',
-                          style:
-                              TextStyle(color: CicadaColors.textTertiary))
-                      : Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: _configuredProviders
-                              .map((p) => Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          color: CicadaColors.ok
-                                              .withValues(alpha: 0.4)),
-                                      borderRadius: BorderRadius.circular(4),
-                                      color: CicadaColors.ok
-                                          .withValues(alpha: 0.08),
-                                    ),
-                                    child: Text(p,
-                                        style: const TextStyle(
+                  child:
+                      _configuredProviders.isEmpty
+                          ? Text(
+                            '暂未配置任何模型',
+                            style: TextStyle(color: CicadaColors.textTertiary),
+                          )
+                          : Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children:
+                                _configuredProviders
+                                    .map(
+                                      (p) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: CicadaColors.ok.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                          color: CicadaColors.ok.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          p,
+                                          style: const TextStyle(
                                             fontSize: 11,
-                                            color: CicadaColors.ok)),
-                                  ))
-                              .toList(),
-                        ),
+                                            color: CicadaColors.ok,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
                 ),
               ),
             ],
@@ -424,9 +459,11 @@ class _DashboardPageState extends State<DashboardPage>
                 _actionButton(
                   icon: Icons.open_in_browser,
                   label: '打开面板',
-                  onPressed: _serviceRunning
-                      ? () => launchUrl(Uri.parse('http://127.0.0.1:18789/'))
-                      : null,
+                  onPressed:
+                      _serviceRunning
+                          ? () =>
+                              launchUrl(Uri.parse('http://127.0.0.1:18789/'))
+                          : null,
                 ),
                 const SizedBox(width: 12),
                 _actionButton(
@@ -435,6 +472,10 @@ class _DashboardPageState extends State<DashboardPage>
                   onPressed: () {
                     if (Platform.isWindows) {
                       Process.run('cmd', ['/c', 'start', 'cmd']);
+                    } else if (Platform.isMacOS) {
+                      Process.run('open', ['-a', 'Terminal']);
+                    } else if (Platform.isLinux) {
+                      Process.run('x-terminal-emulator', []);
                     }
                   },
                 ),
@@ -446,6 +487,10 @@ class _DashboardPageState extends State<DashboardPage>
                     final dir = ConfigService.configDir;
                     if (Platform.isWindows) {
                       Process.run('explorer', [dir.replaceAll('/', '\\')]);
+                    } else if (Platform.isMacOS) {
+                      Process.run('open', [dir]);
+                    } else if (Platform.isLinux) {
+                      Process.run('xdg-open', [dir]);
                     }
                   },
                 ),
@@ -470,7 +515,8 @@ class _DashboardPageState extends State<DashboardPage>
                 _metricCell(
                   'SERVICE',
                   _serviceRunning ? 'ACTIVE' : 'HALTED',
-                  valueColor: _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
+                  valueColor:
+                      _serviceRunning ? CicadaColors.ok : CicadaColors.alert,
                 ),
               ],
             ),
@@ -533,7 +579,9 @@ class _DashboardPageState extends State<DashboardPage>
         Text(
           label,
           style: const TextStyle(
-              color: CicadaColors.textTertiary, fontSize: 12),
+            color: CicadaColors.textTertiary,
+            fontSize: 12,
+          ),
         ),
         const Spacer(),
         Flexible(
@@ -556,11 +604,7 @@ class _DashboardPageState extends State<DashboardPage>
     required String label,
     VoidCallback? onPressed,
   }) {
-    return _TacticalButton(
-      icon: icon,
-      label: label,
-      onPressed: onPressed,
-    );
+    return _TacticalButton(icon: icon, label: label, onPressed: onPressed);
   }
 }
 
@@ -586,26 +630,28 @@ class _TacticalButtonState extends State<_TacticalButton> {
   @override
   Widget build(BuildContext context) {
     final disabled = widget.onPressed == null;
-    final borderColor = disabled
-        ? CicadaColors.muted.withValues(alpha: 0.3)
-        : _hovered
+    final borderColor =
+        disabled
+            ? CicadaColors.muted.withValues(alpha: 0.3)
+            : _hovered
             ? CicadaColors.accent
             : CicadaColors.accent.withValues(alpha: 0.5);
-    final fgColor = disabled
-        ? CicadaColors.textTertiary
-        : _hovered
+    final fgColor =
+        disabled
+            ? CicadaColors.textTertiary
+            : _hovered
             ? CicadaColors.accent
             : CicadaColors.textSecondary;
-    final bgColor = _hovered && !disabled
-        ? CicadaColors.accent.withValues(alpha: 0.08)
-        : Colors.transparent;
+    final bgColor =
+        _hovered && !disabled
+            ? CicadaColors.accent.withValues(alpha: 0.08)
+            : Colors.transparent;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      cursor: disabled
-          ? SystemMouseCursors.forbidden
-          : SystemMouseCursors.click,
+      cursor:
+          disabled ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onPressed,
         child: ClipPath(
@@ -650,6 +696,5 @@ class _CornerCutClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(covariant _CornerCutClipper old) =>
-      cutSize != old.cutSize;
+  bool shouldReclip(covariant _CornerCutClipper old) => cutSize != old.cutSize;
 }

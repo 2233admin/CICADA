@@ -1,16 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cicada/main.dart';
 
 void main() {
-  testWidgets('CicadaApp exposes the expected app shell metadata', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      const CicadaApp(home: SizedBox.shrink()),
-    );
-
-    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-    expect(app.title, '知了猴');
+  testWidgets('CicadaApp renders', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: CicadaApp()));
+    // Wait a bit for widget to render
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('CICADA'), findsOneWidget);
   });
 }
