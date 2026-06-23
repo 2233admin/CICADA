@@ -1,0 +1,34 @@
+version = 1
+
+test_patterns = [
+  "tests/**",
+  "test/**",
+  "**/*test*",
+  "**/*.test.*",
+]
+
+exclude_patterns = [
+  "node_modules/**",
+  "dist/**",
+  "target/**",
+  "vendor/**",
+  "build/**",
+  "coverage/**",
+  "bundle.js",
+  "**/bundle.js",
+  "**/generated/**",
+]
+
+[[analyzers]]
+name = "cxx"
+enabled = true
+
+  [analyzers.meta]
+  cyclomatic_complexity_threshold = "high"
+
+[[analyzers]]
+name = "shell"
+enabled = true
+
+  [analyzers.meta]
+  dialect = "bash"
